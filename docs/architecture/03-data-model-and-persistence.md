@@ -1,0 +1,2369 @@
+# Data Model and Persistence
+
+## Real-Time Collaborative Infinite Canvas
+
+**Document path:** `docs/architecture/03-data-model-and-persistence.md`
+**Document status:** Accepted
+**Product phase:** Two-day MVP / Hackathon
+**Last updated:** 25 July 2026
+**Primary owners:** Engineering and Architecture
+
+---
+
+# 1. Purpose
+
+This document defines the persistent data model for the real-time collaborative infinite canvas.
+
+It covers:
+
+- Guest identities
+- Guest sessions
+- Rooms
+- Room memberships
+- Share links
+- Collaboration documents
+- Yjs snapshots and updates
+- Assets
+- Product object metadata
+- Deleted-object recovery
+- Room archive
+- Audit records
+- Export records
+- Database indexes
+- Retention
+- Transaction boundaries
+- Data consistency
+- Migration strategy
+- Test requirements
+
+The system uses:
+
+- PostgreSQL for relational application data and collaboration persistence
+- Private object storage for image, audio, and generated export binaries
+- IndexedDB for client-side cached room state and unsynchronised local drafts
+
+---
+
+# 2. Data architecture principles
+
+## 2.1 PostgreSQL is the authoritative application database
+
+PostgreSQL is authoritative for:
+
+- Guest identity records
+- Guest sessions
+- Room metadata
+- Room memberships
+- Roles
+- Share-link state
+- Archive state
+- Asset ownership and status
+- Collaboration persistence records
+- Audit records
+- Export records
+
+The browser must not be treated as authoritative for these records.
+
+---
+
+## 2.2 Yjs is the collaborative document state
+
+The Yjs document is authoritative for the current collaborative canvas document, including:
+
+- Active Excalidraw elements
+- Shared element order
+- Product object metadata
+- Deleted-object records
+- Collaboration-document metadata
+- Temporary physics leases where implemented
+
+PostgreSQL persists the encoded Yjs document and related updates.
+
+---
+
+## 2.3 Excalidraw is the durable visual format
+
+The visual room state is represented through valid Excalidraw element records stored inside the Yjs document.
+
+The relational database should not maintain a second independently editable table of every live Excalidraw element.
+
+Doing so would create two competing scene models.
+
+---
+
+## 2.4 Binary assets do not belong in relational rows
+
+Large image and audio binaries must be stored in private object storage.
+
+PostgreSQL stores:
+
+- Asset identifiers
+- Room ownership
+- File type
+- File size
+- Storage key
+- Upload status
+- Metadata
+- Timestamps
+
+PostgreSQL should not store ordinary image or audio bytes in application tables.
+
+---
+
+## 2.5 Private data is separated from collaboration state
+
+Guest email addresses, session tokens, and private access claims must not be stored in:
+
+- Excalidraw scene data
+- Yjs awareness
+- Public exports
+- Shared product object metadata
+- Asset URLs embedded permanently in scene content
+
+---
+
+## 2.6 Persistence must support recovery
+
+The persistence model must support recovery from:
+
+- Browser refresh
+- Browser restart
+- Collaboration-server restart
+- API restart
+- Temporary database interruption
+- Temporary object-storage interruption
+- Client disconnection
+- Rejected offline edits
+
+---
+
+# 3. Persistence domains
+
+The persistent system is divided into five domains.
+
+## 3.1 Identity domain
+
+Contains:
+
+- Guests
+- Guest sessions
+
+## 3.2 Room-access domain
+
+Contains:
+
+- Rooms
+- Memberships
+- Share links
+- Permission history
+
+## 3.3 Collaboration domain
+
+Contains:
+
+- Yjs document snapshots
+- Incremental Yjs updates
+- Document metadata
+- Compaction state
+
+## 3.4 Asset domain
+
+Contains:
+
+- Image assets
+- Audio assets
+- Generated exports
+- Asset access metadata
+
+## 3.5 Audit and recovery domain
+
+Contains:
+
+- Audit records
+- Archive events
+- Recycle-bin data where stored outside Yjs
+- Rejected-draft metadata where uploaded
+- Export history
+
+---
+
+# 4. Identifier strategy
+
+The system should use globally unique, non-sequential identifiers.
+
+Recommended format:
+
+- UUIDv7
+- ULID
+- Another sortable 128-bit identifier
+
+The exact library may be selected during implementation.
+
+Identifiers should be:
+
+- Unique across application instances
+- Safe for public URLs when required
+- Difficult to enumerate
+- Efficient enough for PostgreSQL indexes
+- Generated consistently
+
+Suggested TypeScript aliases:
+
+```ts id="28vas7"
+type GuestId = string;
+type GuestSessionId = string;
+type RoomId = string;
+type MembershipId = string;
+type ShareLinkId = string;
+type AssetId = string;
+type ExportId = string;
+type AuditEventId = string;
+```
+
+A room ID is not an access credential.
+
+---
+
+# 5. Timestamp strategy
+
+All database timestamps should use:
+
+```text id="qh5ihl"
+TIMESTAMPTZ
+```
+
+Application code should exchange timestamps as ISO 8601 UTC strings.
+
+Recommended common columns:
+
+```text id="q43flh"
+created_at
+updated_at
+deleted_at
+archived_at
+expires_at
+```
+
+Database timestamps should normally be generated by PostgreSQL.
+
+---
+
+# 6. Enum strategy
+
+The implementation may use either:
+
+- PostgreSQL enums
+- Text columns with check constraints
+
+For the MVP, text columns with check constraints may simplify migrations.
+
+Example:
+
+```sql id="77mjwg"
+role TEXT NOT NULL
+CHECK (role IN ('owner', 'editor', 'viewer'))
+```
+
+Application-level schemas must validate the same values.
+
+---
+
+# 7. Guest table
+
+Suggested table:
+
+```text id="quhwsr"
+guests
+```
+
+Conceptual schema:
+
+```sql id="qwbtai"
+CREATE TABLE guests (
+  id              UUID PRIMARY KEY,
+  email_normalized TEXT NOT NULL,
+  username        TEXT NOT NULL,
+  colour          TEXT NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at    TIMESTAMPTZ,
+  disabled_at     TIMESTAMPTZ
+);
+```
+
+---
+
+## 7.1 Guest fields
+
+### `id`
+
+Stable internal guest identifier.
+
+### `email_normalized`
+
+Normalised unverified email address.
+
+It is:
+
+- Required
+- Private
+- Not proof of ownership
+- Not included in awareness
+- Not included in public room exports
+
+### `username`
+
+Visible collaborator name.
+
+### `colour`
+
+Assigned collaborator colour.
+
+### `last_seen_at`
+
+Optional activity timestamp.
+
+### `disabled_at`
+
+Allows future invalidation without hard deletion.
+
+---
+
+## 7.2 Guest uniqueness
+
+The MVP should not assume that an email uniquely identifies one verified human.
+
+Possible options:
+
+### Option A — Reuse guest by normalised email
+
+Advantages:
+
+- Simple returning-session model
+- Stable identity
+
+Disadvantages:
+
+- Email is unverified
+- Another person can enter the same address
+
+### Option B — Create one guest per guest-session registration
+
+Advantages:
+
+- Does not imply verified identity
+- Avoids accidental account semantics
+
+Disadvantages:
+
+- Duplicate guest records
+
+### Recommended MVP policy
+
+A guest identity should primarily be session-based.
+
+The application may reuse a valid existing guest session, but should not automatically grant access merely because a newly entered email matches an existing guest row.
+
+Room access must depend on the current session and membership, not on email matching alone.
+
+---
+
+# 8. Guest session table
+
+Suggested table:
+
+```text id="sv0epv"
+guest_sessions
+```
+
+Conceptual schema:
+
+```sql id="1xzd8v"
+CREATE TABLE guest_sessions (
+  id                  UUID PRIMARY KEY,
+  guest_id            UUID NOT NULL REFERENCES guests(id),
+  token_hash          TEXT NOT NULL UNIQUE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_used_at        TIMESTAMPTZ,
+  expires_at          TIMESTAMPTZ NOT NULL,
+  revoked_at          TIMESTAMPTZ,
+  user_agent_summary  TEXT,
+  ip_hash             TEXT
+);
+```
+
+---
+
+## 8.1 Token storage
+
+Raw session tokens must not be stored.
+
+Store:
+
+- Cryptographic token hash
+- Expiry
+- Revocation state
+
+The raw opaque token is returned to the browser and stored through an appropriate secure mechanism.
+
+---
+
+## 8.2 Session validation
+
+A session is valid when:
+
+- Token hash matches.
+- Session has not expired.
+- Session is not revoked.
+- Guest is not disabled.
+
+---
+
+## 8.3 Session retention
+
+Expired or revoked sessions may be removed after a retention period.
+
+Suggested MVP retention:
+
+```text id="x994pl"
+30 days after expiry or revocation
+```
+
+---
+
+# 9. Rooms table
+
+Suggested table:
+
+```text id="wm9n1p"
+rooms
+```
+
+Conceptual schema:
+
+```sql id="354gno"
+CREATE TABLE rooms (
+  id                        UUID PRIMARY KEY,
+  name                      TEXT NOT NULL,
+  status                    TEXT NOT NULL DEFAULT 'active',
+  created_by_guest_id       UUID NOT NULL REFERENCES guests(id),
+  collaboration_schema_version INTEGER NOT NULL DEFAULT 1,
+  excalidraw_version        TEXT NOT NULL,
+  created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  archived_at               TIMESTAMPTZ,
+  archived_by_guest_id      UUID REFERENCES guests(id)
+);
+```
+
+Constraint:
+
+```sql id="yuqdah"
+CHECK (status IN ('active', 'archived'))
+```
+
+---
+
+## 9.1 Room fields
+
+### `name`
+
+Human-readable room name.
+
+A generated default name is acceptable.
+
+### `status`
+
+Current authoritative room state.
+
+### `created_by_guest_id`
+
+Original creator.
+
+This is audit information and does not replace owner membership.
+
+### `collaboration_schema_version`
+
+Expected collaboration-document schema.
+
+### `excalidraw_version`
+
+Pinned Excalidraw version associated with persisted scene compatibility.
+
+### `archived_at`
+
+Archive timestamp.
+
+### `archived_by_guest_id`
+
+Guest who performed the archive action.
+
+---
+
+## 9.2 Room deletion
+
+Permanent room deletion is outside the mandatory MVP.
+
+The initial system should archive rather than hard-delete rooms.
+
+---
+
+# 10. Room memberships table
+
+Suggested table:
+
+```text id="5jxusq"
+room_memberships
+```
+
+Conceptual schema:
+
+```sql id="8wk7at"
+CREATE TABLE room_memberships (
+  id                UUID PRIMARY KEY,
+  room_id           UUID NOT NULL REFERENCES rooms(id),
+  guest_id          UUID NOT NULL REFERENCES guests(id),
+  role              TEXT NOT NULL,
+  created_by_guest_id UUID REFERENCES guests(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  revoked_at        TIMESTAMPTZ,
+  revoked_by_guest_id UUID REFERENCES guests(id),
+
+  UNIQUE (room_id, guest_id),
+
+  CHECK (role IN ('owner', 'editor', 'viewer'))
+);
+```
+
+---
+
+## 10.1 Membership authority
+
+This table is authoritative for room roles.
+
+The browser must not self-assign a role.
+
+---
+
+## 10.2 Active membership
+
+A membership is active when:
+
+```text id="jcbma0"
+revoked_at IS NULL
+```
+
+---
+
+## 10.3 Owner invariant
+
+Every active room should have at least one active owner.
+
+Operations that would remove the last owner must be rejected.
+
+This invariant should be enforced through application transaction logic.
+
+A deferred database constraint may be added later if needed.
+
+---
+
+## 10.4 Membership revocation
+
+Revocation should normally set:
+
+- `revoked_at`
+- `revoked_by_guest_id`
+
+The row should not be hard-deleted immediately.
+
+This preserves auditability.
+
+---
+
+# 11. Share links table
+
+Suggested table:
+
+```text id="6agz73"
+room_share_links
+```
+
+Conceptual schema:
+
+```sql id="79fzy8"
+CREATE TABLE room_share_links (
+  id                  UUID PRIMARY KEY,
+  room_id             UUID NOT NULL REFERENCES rooms(id),
+  token_hash          TEXT NOT NULL UNIQUE,
+  default_role        TEXT NOT NULL DEFAULT 'editor',
+  created_by_guest_id UUID NOT NULL REFERENCES guests(id),
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at          TIMESTAMPTZ,
+  revoked_at          TIMESTAMPTZ,
+  max_uses            INTEGER,
+  use_count           INTEGER NOT NULL DEFAULT 0,
+
+  CHECK (default_role IN ('editor', 'viewer'))
+);
+```
+
+---
+
+## 11.1 Share-token security
+
+The raw share token is shown in the URL.
+
+Only its hash is stored.
+
+The room ID may also appear in the URL, but the token grants the invitation capability.
+
+---
+
+## 11.2 Share-link role
+
+A share link may grant:
+
+- Editor
+- Viewer
+
+A share link must never automatically grant owner.
+
+---
+
+## 11.3 Share-link use
+
+Joining through a share link should create or reactivate the appropriate room membership.
+
+Use count should be incremented transactionally where limits exist.
+
+---
+
+# 12. Collaboration documents table
+
+Suggested table:
+
+```text id="tut7zw"
+collaboration_documents
+```
+
+Conceptual schema:
+
+```sql id="jfgffj"
+CREATE TABLE collaboration_documents (
+  room_id              UUID PRIMARY KEY REFERENCES rooms(id),
+  snapshot             BYTEA NOT NULL,
+  state_vector         BYTEA,
+  schema_version       INTEGER NOT NULL,
+  excalidraw_version   TEXT NOT NULL,
+  snapshot_sequence    BIGINT NOT NULL DEFAULT 0,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  compacted_at         TIMESTAMPTZ
+);
+```
+
+---
+
+## 12.1 Snapshot field
+
+Contains the encoded Yjs document state.
+
+It must include the defined top-level shared structures.
+
+---
+
+## 12.2 State vector
+
+Optional encoded Yjs state vector used for efficient comparison or update generation.
+
+---
+
+## 12.3 Snapshot sequence
+
+Represents the latest incremental update sequence incorporated into the snapshot.
+
+---
+
+## 12.4 Initial document
+
+Room creation should create an initial empty Yjs document snapshot.
+
+This avoids ambiguity between:
+
+- Missing room
+- Empty room
+- Failed collaboration persistence
+
+---
+
+# 13. Collaboration updates table
+
+Suggested table:
+
+```text id="jow6cc"
+collaboration_updates
+```
+
+Conceptual schema:
+
+```sql id="16srkz"
+CREATE TABLE collaboration_updates (
+  id              BIGSERIAL PRIMARY KEY,
+  room_id         UUID NOT NULL REFERENCES rooms(id),
+  sequence        BIGINT NOT NULL,
+  update_payload  BYTEA NOT NULL,
+  origin          TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (room_id, sequence)
+);
+```
+
+---
+
+## 13.1 Update sequence
+
+The sequence number must increase monotonically per room.
+
+It provides:
+
+- Deterministic replay order
+- Snapshot boundary
+- Compaction support
+- Diagnostics
+
+---
+
+## 13.2 Origin
+
+Optional diagnostic classification:
+
+```text id="38jlpp"
+local-excalidraw
+restore-deleted-object
+physics-simulation
+offline-reconciliation
+document-migration
+```
+
+Origin must not be treated as proof of authorisation.
+
+---
+
+## 13.3 MVP simplification
+
+For the two-day MVP, the project may persist only debounced complete Yjs snapshots and omit incremental updates.
+
+This simplification is acceptable when:
+
+- Document restart recovery works.
+- Persistence writes are debounced.
+- Scene size remains within expected limits.
+- The limitation is documented.
+- A migration path to incremental updates remains possible.
+
+If incremental updates are omitted, the `collaboration_updates` table may be deferred.
+
+---
+
+# 14. Persistence strategies
+
+Two supported strategies are documented.
+
+## 14.1 Strategy A — Snapshot-only MVP
+
+On durable Yjs change:
+
+1. Debounce document persistence.
+2. Encode the complete Yjs state.
+3. Upsert `collaboration_documents`.
+4. Update schema and Excalidraw versions.
+5. Confirm persistence result.
+
+Advantages:
+
+- Fastest to implement
+- Simple recovery
+- Simple compaction
+
+Disadvantages:
+
+- Larger writes
+- Less historical visibility
+- Less efficient for large documents
+
+Recommended for the first working MVP.
+
+---
+
+## 14.2 Strategy B — Snapshot plus incremental updates
+
+On durable change:
+
+1. Persist incremental Yjs update.
+2. Assign sequence.
+3. Periodically compact updates into a new snapshot.
+4. Remove updates included in the snapshot.
+
+Advantages:
+
+- Efficient ongoing writes
+- Better recovery granularity
+- Supports replay and diagnostics
+
+Disadvantages:
+
+- More complexity
+- Requires compaction logic
+- More transactional coordination
+
+Recommended after the core MVP works reliably.
+
+---
+
+# 15. Persistence transaction boundaries
+
+## 15.1 Room creation transaction
+
+Room creation must occur in one database transaction.
+
+Operations:
+
+1. Insert room.
+2. Insert owner membership.
+3. Insert initial collaboration document.
+4. Create default share link if required.
+5. Insert audit event.
+
+If any required operation fails, the transaction rolls back.
+
+---
+
+## 15.2 Join-by-link transaction
+
+Operations:
+
+1. Lock or validate share-link record.
+2. Verify not expired or revoked.
+3. Verify use count.
+4. Create or reactivate membership.
+5. Increment use count where applicable.
+6. Insert audit event.
+
+These operations should be atomic.
+
+---
+
+## 15.3 Role-change transaction
+
+Operations:
+
+1. Lock target membership.
+2. Validate acting guest role.
+3. Validate room status.
+4. Prevent removal of final owner.
+5. Update role or revocation.
+6. Insert audit event.
+
+The collaboration server may be notified after commit.
+
+---
+
+## 15.4 Archive transaction
+
+Operations:
+
+1. Lock room row.
+2. Validate owner permission.
+3. Set room status to archived.
+4. Set archive timestamps.
+5. Clear or invalidate relevant active share links if policy requires.
+6. Insert audit event.
+
+Collaboration connections should be closed or downgraded after commit.
+
+---
+
+## 15.5 Restore transaction
+
+Operations:
+
+1. Lock room row.
+2. Validate owner permission.
+3. Set status to active.
+4. Clear archive fields where appropriate.
+5. Insert audit event.
+
+---
+
+## 15.6 Asset-ready transaction
+
+Operations:
+
+1. Lock asset row.
+2. Validate current state.
+3. Confirm storage object exists where practical.
+4. Set status to ready.
+5. Store checksum and final metadata.
+6. Insert audit event if needed.
+
+A scene object should reference the asset only after the asset record is valid.
+
+---
+
+# 16. Asset table
+
+Suggested table:
+
+```text id="0ps6te"
+assets
+```
+
+Conceptual schema:
+
+```sql id="8krd2v"
+CREATE TABLE assets (
+  id                   UUID PRIMARY KEY,
+  room_id              UUID NOT NULL REFERENCES rooms(id),
+  created_by_guest_id  UUID NOT NULL REFERENCES guests(id),
+  kind                 TEXT NOT NULL,
+  status               TEXT NOT NULL,
+  storage_key          TEXT NOT NULL UNIQUE,
+  original_filename    TEXT,
+  mime_type            TEXT NOT NULL,
+  size_bytes           BIGINT,
+  checksum_sha256      TEXT,
+  duration_ms          INTEGER,
+  width_px             INTEGER,
+  height_px            INTEGER,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ready_at             TIMESTAMPTZ,
+  failed_at            TIMESTAMPTZ,
+  archived_at          TIMESTAMPTZ,
+
+  CHECK (kind IN ('image', 'audio', 'export')),
+  CHECK (
+    status IN (
+      'pending',
+      'uploading',
+      'ready',
+      'failed',
+      'archived'
+    )
+  )
+);
+```
+
+---
+
+# 17. Asset kind rules
+
+## Image
+
+May include:
+
+- Width
+- Height
+- MIME type
+- File size
+- Checksum
+
+## Audio
+
+May include:
+
+- Duration
+- MIME type
+- File size
+- Checksum
+
+## Export
+
+May include:
+
+- Export format
+- Generating guest
+- Room snapshot reference
+- Expiry
+
+An optional `metadata JSONB` column may store non-critical format-specific metadata.
+
+---
+
+# 18. Storage-key design
+
+Object-storage keys should not expose private guest data.
+
+Suggested pattern:
+
+```text id="fwt9lm"
+rooms/{roomId}/assets/{assetId}/{generatedFilename}
+```
+
+Example:
+
+```text id="976mfg"
+rooms/01J.../assets/01K.../source.webp
+```
+
+Do not use raw email addresses in storage keys.
+
+---
+
+# 19. Asset access
+
+Asset access requires:
+
+- Valid guest session
+- Active room access
+- Appropriate room state
+- Asset belonging to the room
+
+The API may issue:
+
+- Short-lived signed read URL
+- Authenticated proxy response
+- Short-lived upload URL
+
+Permanent public URLs are not allowed.
+
+---
+
+# 20. Pending uploads
+
+A pending asset record may exist before the binary upload succeeds.
+
+The scene should not treat it as a ready shared asset.
+
+Allowed state transitions:
+
+```text id="f28o95"
+pending
+→ uploading
+→ ready
+```
+
+Failure path:
+
+```text id="0z7lgp"
+pending
+→ uploading
+→ failed
+```
+
+Retry path:
+
+```text id="2nek70"
+failed
+→ uploading
+→ ready
+```
+
+Invalid transitions should be rejected.
+
+---
+
+# 21. Asset reference model
+
+The Yjs product metadata or Excalidraw file mapping stores:
+
+```text id="iiu5qt"
+assetId
+```
+
+It must not store:
+
+- Raw object-storage credentials
+- Permanent signed URLs
+- Private database connection information
+
+---
+
+# 22. Excalidraw file mapping
+
+Image elements may use Excalidraw file IDs.
+
+The system should maintain a stable mapping between:
+
+- Excalidraw file ID
+- Product asset ID
+
+Possible product metadata:
+
+```ts id="b77v5l"
+interface ImageAssetMapping {
+  excalidrawFileId: string;
+  assetId: string;
+  mimeType: string;
+  createdAt: string;
+}
+```
+
+This mapping belongs in the collaborative product metadata, not in a separate editable visual database table.
+
+---
+
+# 23. Product object persistence
+
+Product object metadata is primarily stored inside the Yjs document.
+
+Examples:
+
+- Sticky-note composition
+- Audio-card composition
+- Image asset mapping
+- Behaviour flags
+- Object schema version
+
+PostgreSQL should not mirror every product object unless required for:
+
+- Search
+- Reporting
+- Independent asset lifecycle
+- Recovery
+- Administrative inspection
+
+For the MVP, avoid duplicating full product object state relationally.
+
+---
+
+# 24. Audio-card persistence
+
+An audio card consists of:
+
+1. Excalidraw visual elements in the Yjs document
+2. Product object metadata in the Yjs document
+3. Audio asset record in PostgreSQL
+4. Audio binary in object storage
+
+Conceptual metadata:
+
+```ts id="8dgx4h"
+interface AudioCardMetadata {
+  id: string;
+  kind: "audio-card";
+  rootElementId: string;
+  elementIds: string[];
+  assetId: string;
+  title?: string;
+  durationMs?: number;
+  status: "uploading" | "ready" | "failed";
+  schemaVersion: number;
+}
+```
+
+---
+
+# 25. Sticky-note persistence
+
+A sticky note consists of:
+
+- Valid Excalidraw elements
+- Optional product metadata identifying the composition
+
+No separate relational sticky-note table is required.
+
+---
+
+# 26. Deleted-object persistence
+
+The preferred MVP design stores recoverable deleted objects in the Yjs document.
+
+Advantages:
+
+- Deletion and scene update can occur in one Yjs transaction.
+- Restoration synchronises naturally.
+- Product metadata remains attached.
+- Offline deletion can be preserved.
+
+---
+
+## 26.1 Optional relational recycle-bin index
+
+A future table may provide administrative lookup.
+
+Suggested table:
+
+```text id="5t76i6"
+deleted_object_index
+```
+
+Conceptual schema:
+
+```sql id="nwb0qu"
+CREATE TABLE deleted_object_index (
+  id                  UUID PRIMARY KEY,
+  room_id             UUID NOT NULL REFERENCES rooms(id),
+  deleted_object_id   TEXT NOT NULL,
+  deleted_by_guest_id UUID REFERENCES guests(id),
+  deleted_at          TIMESTAMPTZ NOT NULL,
+  restored_at         TIMESTAMPTZ,
+  restored_by_guest_id UUID REFERENCES guests(id),
+
+  UNIQUE (room_id, deleted_object_id)
+);
+```
+
+This index is optional for the MVP.
+
+The full recoverable object payload should remain in Yjs unless there is a strong reason to duplicate it.
+
+---
+
+# 27. Delete transaction
+
+A product-managed delete should occur in one Yjs transaction:
+
+1. Copy active element records.
+2. Copy relevant product metadata.
+3. Record original order.
+4. Add deleted-object record.
+5. Remove active elements.
+6. Remove IDs from element order.
+7. Remove or mark active product metadata.
+
+This avoids partial deletion.
+
+---
+
+# 28. Restore transaction
+
+Restore should occur in one Yjs transaction:
+
+1. Load deleted-object record.
+2. Validate element IDs.
+3. Generate new IDs where collisions exist.
+4. Restore active element records.
+5. Restore element order.
+6. Restore product metadata.
+7. Mark or remove deleted-object record.
+
+Associated assets should not be recreated if the original asset remains valid.
+
+---
+
+# 29. Delete versus edit consistency
+
+Delete wins for the active scene.
+
+A stale edit must not recreate a deleted object automatically.
+
+The adapter should reject or ignore updates for an element ID that is currently represented by an active deleted-object tombstone unless the update originates from an explicit restore operation.
+
+---
+
+# 30. Audit events table
+
+Suggested table:
+
+```text id="pql093"
+audit_events
+```
+
+Conceptual schema:
+
+```sql id="l3r0nw"
+CREATE TABLE audit_events (
+  id              UUID PRIMARY KEY,
+  room_id         UUID REFERENCES rooms(id),
+  actor_guest_id  UUID REFERENCES guests(id),
+  event_type      TEXT NOT NULL,
+  target_type     TEXT,
+  target_id       TEXT,
+  metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  request_id      TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+---
+
+# 31. Audit event types
+
+Suggested event types:
+
+```text id="e9w6nd"
+guest.session.created
+guest.session.revoked
+
+room.created
+room.joined
+room.archived
+room.restored
+
+membership.created
+membership.role_changed
+membership.revoked
+
+share_link.created
+share_link.revoked
+share_link.used
+
+asset.created
+asset.ready
+asset.failed
+asset.archived
+
+export.requested
+export.completed
+export.failed
+
+offline_draft.rejected
+```
+
+Ordinary scene edits do not need one relational audit row each.
+
+That would create excessive write volume.
+
+---
+
+# 32. Audit privacy
+
+Audit metadata must avoid:
+
+- Raw session tokens
+- Signed URLs
+- Asset credentials
+- Full audio or image content
+- Unnecessary email copies
+
+Guest ID is preferred over guest email.
+
+---
+
+# 33. Export records table
+
+Suggested table:
+
+```text id="7nt89x"
+exports
+```
+
+Conceptual schema:
+
+```sql id="7dbtyq"
+CREATE TABLE exports (
+  id                    UUID PRIMARY KEY,
+  room_id               UUID NOT NULL REFERENCES rooms(id),
+  requested_by_guest_id UUID NOT NULL REFERENCES guests(id),
+  asset_id              UUID REFERENCES assets(id),
+  format                TEXT NOT NULL,
+  status                TEXT NOT NULL,
+  scene_schema_version  INTEGER NOT NULL,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at          TIMESTAMPTZ,
+  failed_at             TIMESTAMPTZ,
+  expires_at            TIMESTAMPTZ,
+
+  CHECK (format IN ('png', 'json', 'svg')),
+  CHECK (status IN ('pending', 'processing', 'ready', 'failed'))
+);
+```
+
+JSON exports may be returned directly without creating an asset row for the MVP.
+
+---
+
+# 34. Archive persistence
+
+Room archive state is stored in `rooms`.
+
+Archiving does not remove:
+
+- Memberships
+- Collaboration documents
+- Assets
+- Audit records
+- Deleted-object records
+
+Archived rooms remain recoverable.
+
+---
+
+# 35. Archived asset behaviour
+
+Assets belonging to an archived room should remain stored.
+
+Access may remain available to authorised viewers where the product permits archived-room viewing.
+
+New uploads must be rejected.
+
+---
+
+# 36. Client-side IndexedDB model
+
+IndexedDB stores device-local state.
+
+Suggested logical stores:
+
+```text id="axft4y"
+guest-session
+room-cache
+yjs-documents
+asset-upload-queue
+asset-cache
+rejected-drafts
+```
+
+---
+
+# 37. Room cache record
+
+Conceptual schema:
+
+```ts id="ix1xws"
+interface CachedRoomRecord {
+  roomId: string;
+  roomName: string;
+  lastKnownStatus: "active" | "archived";
+  lastKnownRole: "owner" | "editor" | "viewer";
+  collaborationSchemaVersion: number;
+  excalidrawVersion: string;
+  cachedAt: string;
+  lastOpenedAt: string;
+}
+```
+
+This data is advisory while offline.
+
+It must be revalidated after reconnect.
+
+---
+
+# 38. Rejected draft record
+
+Conceptual schema:
+
+```ts id="4b9hpl"
+interface RejectedDraftRecord {
+  id: string;
+  roomId: string;
+  createdAt: string;
+  rejectedAt: string;
+  reason:
+    | "permission-revoked"
+    | "room-archived"
+    | "access-denied"
+    | "schema-incompatible";
+  yjsState: Uint8Array;
+  exportStatus: "available" | "exported" | "discarded";
+}
+```
+
+The local rejected draft must not automatically reconnect to the shared writable document.
+
+---
+
+# 39. Pending upload record
+
+Conceptual schema:
+
+```ts id="kwjfhf"
+interface PendingUploadRecord {
+  localId: string;
+  roomId: string;
+  kind: "image" | "audio";
+  blob: Blob;
+  mimeType: string;
+  originalFilename?: string;
+  createdAt: string;
+  retryCount: number;
+  status: "queued" | "uploading" | "failed";
+}
+```
+
+Pending blobs may require browser storage quotas.
+
+The application must handle quota failures honestly.
+
+---
+
+# 40. Data retention
+
+## 40.1 Rooms
+
+Active and archived rooms remain until explicitly removed by a future retention policy.
+
+No automatic MVP room deletion is required.
+
+---
+
+## 40.2 Collaboration snapshots
+
+Keep the latest valid snapshot indefinitely while the room exists.
+
+Previous snapshots may be retained temporarily for recovery.
+
+Suggested MVP policy:
+
+```text id="cu7b9q"
+Keep the latest snapshot and one previous known-good snapshot.
+```
+
+---
+
+## 40.3 Incremental updates
+
+When using incremental persistence:
+
+- Retain updates until included in a verified snapshot.
+- Delete compacted updates after a safety interval.
+
+Suggested interval:
+
+```text id="6k52ld"
+24 hours after successful compaction
+```
+
+---
+
+## 40.4 Assets
+
+Assets remain while referenced by:
+
+- Active scene objects
+- Deleted recoverable objects
+- Active exports
+- Archived rooms
+
+Unreferenced failed or abandoned uploads may be removed.
+
+Suggested cleanup:
+
+```text id="hkpu7g"
+Failed or pending assets older than 24 hours
+```
+
+Only remove when no active product metadata references them.
+
+---
+
+## 40.5 Audit records
+
+Suggested MVP retention:
+
+```text id="l903vi"
+90 days
+```
+
+Longer retention may be selected later.
+
+---
+
+## 40.6 Guest sessions
+
+Expired and revoked sessions may be removed after 30 days.
+
+---
+
+## 40.7 Rejected local drafts
+
+Local drafts remain until:
+
+- User exports them
+- User discards them
+- Device storage cleanup occurs
+
+The application should not silently delete a newly rejected draft.
+
+---
+
+# 41. Database indexes
+
+Required or recommended indexes follow.
+
+---
+
+## 41.1 Guest indexes
+
+```sql id="s4f8h1"
+CREATE INDEX idx_guests_last_seen_at
+ON guests(last_seen_at);
+```
+
+A normalised-email index may be created for diagnostics or session recovery, but must not imply verified uniqueness.
+
+```sql id="7po1mm"
+CREATE INDEX idx_guests_email_normalized
+ON guests(email_normalized);
+```
+
+---
+
+## 41.2 Session indexes
+
+```sql id="hdiwvm"
+CREATE UNIQUE INDEX idx_guest_sessions_token_hash
+ON guest_sessions(token_hash);
+
+CREATE INDEX idx_guest_sessions_guest_id
+ON guest_sessions(guest_id);
+
+CREATE INDEX idx_guest_sessions_expires_at
+ON guest_sessions(expires_at);
+```
+
+---
+
+## 41.3 Room indexes
+
+```sql id="02t78z"
+CREATE INDEX idx_rooms_created_by
+ON rooms(created_by_guest_id);
+
+CREATE INDEX idx_rooms_status_updated
+ON rooms(status, updated_at DESC);
+```
+
+---
+
+## 41.4 Membership indexes
+
+```sql id="dhbrt3"
+CREATE UNIQUE INDEX idx_room_memberships_room_guest
+ON room_memberships(room_id, guest_id);
+
+CREATE INDEX idx_room_memberships_guest_active
+ON room_memberships(guest_id, room_id)
+WHERE revoked_at IS NULL;
+
+CREATE INDEX idx_room_memberships_room_role_active
+ON room_memberships(room_id, role)
+WHERE revoked_at IS NULL;
+```
+
+---
+
+## 41.5 Share-link indexes
+
+```sql id="h6lv35"
+CREATE UNIQUE INDEX idx_room_share_links_token_hash
+ON room_share_links(token_hash);
+
+CREATE INDEX idx_room_share_links_room_active
+ON room_share_links(room_id)
+WHERE revoked_at IS NULL;
+```
+
+---
+
+## 41.6 Collaboration update indexes
+
+```sql id="ln8mx4"
+CREATE UNIQUE INDEX idx_collaboration_updates_room_sequence
+ON collaboration_updates(room_id, sequence);
+
+CREATE INDEX idx_collaboration_updates_room_created
+ON collaboration_updates(room_id, created_at);
+```
+
+---
+
+## 41.7 Asset indexes
+
+```sql id="4bmjdr"
+CREATE INDEX idx_assets_room_status
+ON assets(room_id, status);
+
+CREATE INDEX idx_assets_created_by
+ON assets(created_by_guest_id);
+
+CREATE INDEX idx_assets_cleanup_candidates
+ON assets(status, created_at)
+WHERE status IN ('pending', 'failed');
+```
+
+---
+
+## 41.8 Audit indexes
+
+```sql id="y29wsu"
+CREATE INDEX idx_audit_events_room_created
+ON audit_events(room_id, created_at DESC);
+
+CREATE INDEX idx_audit_events_actor_created
+ON audit_events(actor_guest_id, created_at DESC);
+
+CREATE INDEX idx_audit_events_type_created
+ON audit_events(event_type, created_at DESC);
+```
+
+---
+
+# 42. Row locking
+
+Row-level locking should be used for operations that depend on current state.
+
+Examples:
+
+- Changing roles
+- Removing an owner
+- Archiving a room
+- Restoring a room
+- Consuming a limited-use share link
+- Finalising an asset
+- Allocating an update sequence
+
+Use:
+
+```sql id="em18g9"
+SELECT ... FOR UPDATE
+```
+
+where required.
+
+---
+
+# 43. Collaboration persistence locking
+
+Multiple collaboration-server instances may attempt persistence in the future.
+
+For the MVP with one collaboration server, process-local serialisation per room may be sufficient.
+
+Future multi-instance support may require:
+
+- PostgreSQL advisory locks
+- Compare-and-swap snapshot sequence
+- Shared update sequence allocation
+- Sticky room routing
+
+Do not implement distributed locking prematurely.
+
+---
+
+# 44. Idempotency
+
+The following operations should be idempotent where practical:
+
+- Create initial collaboration document
+- Confirm asset upload
+- Archive already archived room
+- Restore already active room
+- Revoke already revoked share link
+- Apply document migration
+- Compact snapshot
+- Restore object request with request ID
+
+Idempotency keys may be added to selected API operations later.
+
+---
+
+# 45. Data validation
+
+Validation occurs at three levels.
+
+## 45.1 API boundary
+
+Validate:
+
+- Request shape
+- Identifier format
+- Role values
+- Filename length
+- MIME type
+- Upload size
+- Export format
+
+## 45.2 Domain layer
+
+Validate:
+
+- Permission
+- Room status
+- Role transitions
+- Owner invariant
+- Asset state transitions
+- Share-link rules
+
+## 45.3 Database layer
+
+Enforce:
+
+- Foreign keys
+- Unique constraints
+- Non-null constraints
+- Check constraints
+
+No single validation level is sufficient alone.
+
+---
+
+# 46. Excalidraw document validation
+
+Before persisting or loading a Yjs snapshot, validate:
+
+- Required top-level Yjs keys
+- Collaboration schema version
+- Excalidraw version
+- Active element IDs
+- Element-order uniqueness
+- Product-object references
+- Deleted-object records
+- Physics lease shape
+
+Invalid data should not be silently replaced with an empty room.
+
+---
+
+# 47. Migration strategy
+
+Database migrations should be:
+
+- Version controlled
+- Applied in order
+- Safe to rerun where supported
+- Tested on empty and populated databases
+- Included in deployment
+
+Suggested location:
+
+```text id="lqdmdp"
+packages/database/migrations/
+```
+
+---
+
+# 48. Collaboration-document migrations
+
+Yjs document migrations are separate from relational migrations.
+
+A collaboration migration may:
+
+- Rename a top-level Yjs key
+- Add schema metadata
+- Normalise product object records
+- Repair element order
+- Upgrade custom metadata
+
+Migration flow:
+
+```text id="6zldj0"
+Load document
+→ Read schema version
+→ Apply deterministic migrations
+→ Validate
+→ Persist upgraded snapshot
+→ Record migration result
+```
+
+---
+
+# 49. Excalidraw version migrations
+
+An Excalidraw upgrade may require scene normalisation.
+
+The adapter package should own these transformations.
+
+The migration must:
+
+- Preserve valid elements
+- Preserve stable IDs where possible
+- Preserve product metadata associations
+- Be tested against representative saved scenes
+- Avoid losing unsupported data silently
+
+---
+
+# 50. Backup strategy
+
+For the MVP, database and object-storage backup may rely on managed-service capabilities.
+
+Minimum expectations:
+
+- PostgreSQL periodic backup
+- Object-storage durability
+- Latest collaboration snapshot restorable
+- Environment configuration documented
+
+Local development may use disposable infrastructure.
+
+---
+
+# 51. Recovery strategy
+
+## Collaboration snapshot corruption
+
+1. Stop returning the corrupted document.
+2. Attempt previous known-good snapshot.
+3. Apply valid later updates where possible.
+4. Record diagnostic event.
+5. Avoid displaying an empty scene as successful recovery.
+
+## Asset metadata exists but binary is missing
+
+1. Mark asset unavailable or failed.
+2. Preserve scene object.
+3. Show actionable fallback.
+4. Do not delete product metadata automatically.
+
+## Binary exists but asset metadata is missing
+
+1. Treat binary as orphaned.
+2. Do not expose publicly.
+3. Clean it up after a retention period.
+
+---
+
+# 52. Data consistency rules
+
+The following invariants must hold.
+
+## Room
+
+- Every room has a creator.
+- Every active room has at least one active owner.
+- Archived rooms reject writable collaboration.
+
+## Collaboration document
+
+- Every room has at most one current collaboration document row.
+- Every active element ID appears at most once in order.
+- Deleted element IDs are absent from active order.
+- Product metadata does not contain credentials.
+
+## Assets
+
+- Every asset belongs to one room.
+- Ready assets have a storage key.
+- Scene references use asset IDs.
+- Unauthorised users cannot resolve private assets.
+
+## Sessions
+
+- Stored tokens are hashed.
+- Expired or revoked sessions do not authenticate.
+
+---
+
+# 53. Privacy model
+
+Private fields include:
+
+- Guest email
+- Session token
+- Session token hash
+- IP-derived information
+- Signed asset URL
+- Storage credentials
+
+These fields must not appear in:
+
+- Awareness
+- Excalidraw elements
+- Product object metadata
+- Public room links
+- PNG exports
+- SVG exports
+- JSON exports
+- Client test APIs
+
+---
+
+# 54. Logging model
+
+Database errors should include enough context for diagnosis:
+
+- Request ID
+- Room ID
+- Guest ID
+- Operation
+- Stable error code
+
+Do not log:
+
+- Raw session tokens
+- Full signed URLs
+- Complete binary payloads
+- Guest email unless explicitly required in a protected audit context
+
+---
+
+# 55. Error mapping
+
+Suggested persistence error codes:
+
+```ts id="t4vnkd"
+type PersistenceErrorCode =
+  | "DATABASE_UNAVAILABLE"
+  | "ROOM_CREATE_FAILED"
+  | "ROOM_NOT_FOUND"
+  | "ROOM_ARCHIVED"
+  | "MEMBERSHIP_NOT_FOUND"
+  | "LAST_OWNER_REQUIRED"
+  | "SHARE_LINK_INVALID"
+  | "SHARE_LINK_EXPIRED"
+  | "SHARE_LINK_REVOKED"
+  | "COLLAB_DOCUMENT_MISSING"
+  | "COLLAB_DOCUMENT_INVALID"
+  | "COLLAB_PERSIST_FAILED"
+  | "ASSET_NOT_FOUND"
+  | "ASSET_STATE_INVALID"
+  | "ASSET_STORAGE_MISSING"
+  | "EXPORT_FAILED";
+```
+
+---
+
+# 56. API repository boundaries
+
+Recommended repositories:
+
+```text id="480rad"
+GuestRepository
+GuestSessionRepository
+RoomRepository
+RoomMembershipRepository
+ShareLinkRepository
+CollaborationDocumentRepository
+AssetRepository
+AuditEventRepository
+ExportRepository
+```
+
+Repositories should expose persistence operations.
+
+They should not decide high-level permission policy.
+
+---
+
+# 57. Service boundaries
+
+Recommended services:
+
+```text id="fat8mq"
+GuestSessionService
+RoomService
+RoomMembershipService
+ShareLinkService
+CollaborationPersistenceService
+AssetService
+RoomArchiveService
+ExportService
+AuditService
+```
+
+Services own:
+
+- Transactions
+- State transitions
+- Permission-dependent operations
+- Repository coordination
+
+---
+
+# 58. Room creation service flow
+
+```ts id="6762zw"
+async function createRoom(input: {
+  actorGuestId: string;
+  name?: string;
+  excalidrawVersion: string;
+}): Promise<Room>;
+```
+
+Expected behaviour:
+
+1. Validate guest.
+2. Generate room ID.
+3. Generate default room name where needed.
+4. Create empty Yjs document.
+5. Encode initial snapshot.
+6. Begin transaction.
+7. Insert room.
+8. Insert owner membership.
+9. Insert collaboration document.
+10. Insert audit event.
+11. Commit.
+12. Return room.
+
+---
+
+# 59. Asset creation service flow
+
+```ts id="0h1sgq"
+async function createAssetUpload(input: {
+  roomId: string;
+  actorGuestId: string;
+  kind: "image" | "audio";
+  mimeType: string;
+  sizeBytes?: number;
+  originalFilename?: string;
+}): Promise<AssetUploadAuthorisation>;
+```
+
+Expected behaviour:
+
+1. Validate room.
+2. Validate room status.
+3. Validate editor or owner role.
+4. Validate MIME type and size.
+5. Create pending asset row.
+6. Generate storage key.
+7. Return upload authorisation.
+
+---
+
+# 60. Archive service flow
+
+```ts id="7enbyo"
+async function archiveRoom(input: {
+  roomId: string;
+  actorGuestId: string;
+}): Promise<void>;
+```
+
+Expected behaviour:
+
+1. Begin transaction.
+2. Lock room.
+3. Validate active status.
+4. Validate owner role.
+5. Set archived state.
+6. Insert audit event.
+7. Commit.
+8. Notify collaboration runtime.
+9. Close or downgrade writable connections.
+10. Clear physics leases.
+
+---
+
+# 61. Testing strategy
+
+## 61.1 Unit tests
+
+Must cover:
+
+- Identifier generation wrapper
+- Email normalisation
+- Session expiry logic
+- Role-transition rules
+- Last-owner rule
+- Share-link state validation
+- Asset state transitions
+- Storage-key generation
+- Retention candidate selection
+- Export privacy filtering
+
+---
+
+## 61.2 Repository integration tests
+
+Must cover:
+
+- Guest creation
+- Session lookup by token hash
+- Room transaction rollback
+- Owner membership creation
+- Membership uniqueness
+- Share-link use counting
+- Collaboration snapshot upsert
+- Update sequence uniqueness
+- Asset lifecycle
+- Audit insertion
+- Archive and restore
+
+---
+
+## 61.3 Service integration tests
+
+Must cover:
+
+- Create room atomically
+- Reject invalid role change
+- Reject final-owner removal
+- Archive room
+- Restore room
+- Reject upload for viewer
+- Mark upload ready
+- Reject invalid asset transition
+- Resolve active share link
+- Reject expired share link
+
+---
+
+## 61.4 Collaboration persistence tests
+
+Must cover:
+
+- Persist empty document
+- Persist scene with one element
+- Reload equivalent Yjs state
+- Reload product metadata
+- Snapshot replacement
+- Incremental update replay where implemented
+- Compaction where implemented
+- Invalid snapshot rejection
+
+---
+
+## 61.5 Asset tests
+
+Must cover:
+
+- Private access enforcement
+- Correct room ownership
+- MIME validation
+- Size validation
+- Missing storage object
+- Ready asset retrieval
+- Archived room behaviour
+
+---
+
+# 62. QA-Intel data assertions
+
+QA-Intel should validate through application-visible behaviour rather than direct production database access.
+
+Useful assertions include:
+
+- Room remains after reload.
+- Role remains after reload.
+- Scene remains equivalent.
+- Image remains resolvable.
+- Audio remains playable.
+- Archived room rejects editing.
+- Restored room retains scene.
+- Viewer does not gain edit capability.
+- Private email is absent from test APIs and exports.
+
+Database inspection may be used in isolated integration environments but should not be the primary end-to-end assertion surface.
+
+---
+
+# 63. MVP implementation order
+
+## Phase 1 — Core relational model
+
+Implement:
+
+- Guests
+- Guest sessions
+- Rooms
+- Memberships
+- Initial collaboration document
+
+---
+
+## Phase 2 — Collaboration persistence
+
+Implement:
+
+- Snapshot-only persistence
+- Document load
+- Debounced document save
+- Restart recovery
+
+---
+
+## Phase 3 — Share links and permissions
+
+Implement:
+
+- Share-link records
+- Join transaction
+- Role enforcement
+- Role changes
+
+---
+
+## Phase 4 — Assets
+
+Implement:
+
+- Asset records
+- Private upload
+- Ready-state transition
+- Authorised retrieval
+- Image and audio integration
+
+---
+
+## Phase 5 — Protected offline recovery
+
+Implement:
+
+- Rejected local draft handling
+- Local recovery metadata
+- Permission-revalidation outcomes
+
+---
+
+## Phase 6 — Optional P1 recovery
+
+Implement after the mandatory release path is reliable:
+
+- Room archive
+- Deleted-object persistence
+- Restore
+
+---
+
+## Phase 7 — Incremental improvements
+
+Implement where time permits:
+
+- Incremental Yjs updates
+- Snapshot compaction
+- Export records
+- Retention jobs
+- Previous known-good snapshots
+
+---
+
+# 64. MVP database scope
+
+The mandatory MVP tables are:
+
+```text id="5q3e0o"
+guests
+guest_sessions
+rooms
+room_memberships
+room_share_links
+collaboration_documents
+assets
+audit_events
+```
+
+Optional after core reliability:
+
+```text id="m9v6yw"
+collaboration_updates
+exports
+deleted_object_index
+```
+
+Deleted-object payloads remain in the Yjs document.
+
+---
+
+# 65. Data-model definition of done
+
+The data model is implemented successfully when:
+
+- Guest sessions persist securely.
+- Room creation is atomic.
+- The creator becomes owner.
+- Membership roles are authoritative.
+- Share links can be revoked.
+- Every room has a recoverable collaboration document.
+- Yjs state survives collaboration-server restart.
+- Assets are private and room-scoped.
+- Image and audio objects reference stable asset IDs.
+- Last-owner removal is rejected.
+- Guest emails remain outside shared scene state.
+- Rejected offline drafts can remain local.
+- Migrations and local database setup are documented.
+- Integration tests prove the key transactional guarantees.
+
+When optional P1 archive is implemented, archived rooms must preserve their scene and assets.
+
+---
+
+# 66. Final persistence policy
+
+The project adopts the following persistence policy:
+
+> PostgreSQL owns identity, rooms, permissions, asset metadata, audit state, and encoded collaboration documents. Private object storage owns binary assets. Yjs owns collaborative scene state, product object metadata, and recoverable deleted objects. IndexedDB owns cached room state and unsynchronised local drafts. No layer may create an independently editable duplicate of the Excalidraw scene.
