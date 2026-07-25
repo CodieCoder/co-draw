@@ -31,6 +31,7 @@ The planning baseline covers:
 - Test and QA-Intel evidence required for release.
 - Scope-control, failure, security, and delivery-risk rules.
 - Decision deadlines for choices intentionally left open by accepted architecture.
+- Persisted task-level plans for bounded work packages and stage increments.
 
 P1 and P2 capabilities remain parked until the mandatory release gate passes. A plan may identify their activation gate but must not present them as active MVP work.
 
@@ -38,11 +39,19 @@ P1 and P2 capabilities remain parked until the mandatory release gate passes. A 
 
 # 3. Planning document index
 
+## 3.1 Cross-stage plan
+
 | No. | Document | Purpose | Status |
 | ---: | --- | --- | --- |
 | 01 | [MVP Implementation Plan](./01-mvp-implementation-plan.md) | Defines the dependency sequence, work packages, acceptance traceability, decision gates, testing, risks, scope controls, and MVP completion gate. | Proposed |
 
 The implementation plan remains `Proposed` until reviewed and explicitly accepted. Its proposed status does not weaken the accepted product or architecture sources on which it is based.
+
+## 3.2 Task-level plans
+
+The accepted [Task-Level Implementation Plan Index](./plans/README.md) owns the complete task-plan catalog, the reusable goal-ready template, and the persistence, numbering, metadata, handoff, evidence, and execution-status conventions.
+
+This top-level index does not duplicate individual task-plan entries. Task-level plans preserve bounded implementation decisions and evidence while remaining subordinate to accepted product and architecture sources and to the dependency sequence in the cross-stage plan.
 
 ---
 
@@ -71,6 +80,7 @@ Before using the implementation plan:
 4. Read the [System Architecture](../architecture/01-system-architecture.md).
 5. Read the applicable domain architecture and ADRs.
 6. Read the [MVP Implementation Plan](./01-mvp-implementation-plan.md).
+7. Read the applicable task-level plan from the [Task-Level Implementation Plan Index](./plans/README.md).
 
 Implementers must continue to read the affected domain document before changing a package, application, contract, persistence boundary, security control, or test surface.
 
@@ -110,6 +120,8 @@ If a mandatory slice fails its exit gate:
 - Preserve evidence and identify the failing boundary.
 - Reduce optional scope before weakening permission, privacy, persistence, offline, or testing requirements.
 
+Task-level plans must be persisted and indexed. A materially different plan receives a new sequential four-digit filename rather than replacing historical scope.
+
 ---
 
 # 8. Security and privacy
@@ -148,7 +160,8 @@ Code tests are not required for planning-only changes.
 
 This index is complete when:
 
-- Every current planning document appears once.
+- Every current top-level planning document appears once.
+- The complete task-level plan catalog is discoverable through the linked task-plan index without being duplicated here.
 - Document paths, titles, purposes, and statuses match.
 - The authority boundary prevents plans from changing accepted scope or architecture.
 - The reading order leads implementers to the applicable accepted sources.

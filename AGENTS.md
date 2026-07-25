@@ -15,6 +15,7 @@ Before making architectural, planning, or implementation changes, read the relev
 - `docs/architecture/`
 - `docs/adr/`
 - `docs/planning/`
+- `docs/planning/plans/`
 
 Start with:
 
@@ -27,6 +28,8 @@ Start with:
 - `docs/planning/01-mvp-implementation-plan.md`
 
 Read additional documents related to the task before editing files.
+
+Before implementation, read the applicable task-level plan under `docs/planning/plans/` when one exists.
 
 Files under `resources/` and the superseded `docs/00-Project description.md` are historical source material. They are non-authoritative and must not override accepted documentation.
 
@@ -67,6 +70,17 @@ When creating or updating documentation:
 8. Update the relevant folder index when files are added, renamed, or removed.
 9. Do not silently change previously accepted architecture.
 10. Record significant new architectural decisions as ADRs.
+11. Persist task-level implementation plans under `docs/planning/plans/`, use the sequential four-digit filename convention, and update `docs/planning/plans/README.md` in the same change. Keep `docs/planning/README.md` linked to that canonical task-plan index rather than duplicating individual plan entries. Do not leave an implementation plan only in chat or attachment history.
+
+## Task plans and goal execution
+
+- Create or materially restructure task-level plans from `docs/planning/plans/TEMPLATE.md`.
+- A plan may be marked `Ready` only after the goal-readiness gate in `docs/planning/plans/README.md` passes.
+- Every ready plan must contain one outcome-focused goal objective, one verifiable completion statement, a ready-to-run `/goal` handoff, dependency-ordered execution steps, and a requirement-to-evidence matrix.
+- `/goal` should point to the exact persisted plan path instead of duplicating the full plan in chat.
+- When implementation begins, change execution status to `In progress` and keep step status, decisions, blockers, progress, and evidence current at meaningful checkpoints.
+- Do not change execution status to `Passed` or claim the goal complete until the plan's completion audit proves every definition-of-done item.
+- Starting a goal does not broaden authorization for external writes, destructive actions, Git operations, deployment, or scope expansion.
 
 ## Document status
 
