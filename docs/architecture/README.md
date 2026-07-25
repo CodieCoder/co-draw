@@ -179,6 +179,8 @@ Architecture Decision Records use the canonical directory:
 docs/adr/
 ```
 
+The canonical reading order is maintained in the [ADR index](../adr/README.md).
+
 ADRs are created only after the relevant architecture documents are accepted. They record decisions already made; they do not introduce new architecture indirectly.
 
 ---
