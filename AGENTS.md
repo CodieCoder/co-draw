@@ -23,6 +23,8 @@ Start with:
 - `docs/product/01-product-requirements.md`
 - `docs/product/02-mvp-scope-and-acceptance-criteria.md`
 - `docs/architecture/01-system-architecture.md`
+- `docs/planning/README.md`
+- `docs/planning/01-mvp-implementation-plan.md`
 
 Read additional documents related to the task before editing files.
 

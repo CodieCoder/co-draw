@@ -28,6 +28,8 @@ Product scope is authoritative in:
 - [MVP Scope and Acceptance Criteria](../product/02-mvp-scope-and-acceptance-criteria.md)
 - [Canvas Interaction Specification](../product/03-canvas-interaction-specification.md)
 
+Cross-domain implementation sequencing is maintained in the proposed [MVP Implementation Plan](../planning/01-mvp-implementation-plan.md). The plan does not override accepted architecture.
+
 ---
 
 # 2. Status meanings

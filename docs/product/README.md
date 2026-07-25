@@ -47,6 +47,8 @@ For focused work:
 
 Continue with the [Architecture Documentation Index](../architecture/README.md) and the applicable [ADR](../adr/README.md).
 
+After reading the accepted sources, use the proposed [MVP Implementation Plan](../planning/01-mvp-implementation-plan.md) for dependency order and delivery evidence.
+
 ---
 
 # 4. Product authority

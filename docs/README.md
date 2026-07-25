@@ -41,7 +41,7 @@ The current implementation-ready baseline consists of:
 - Accepted Architecture Decision Records.
 - Repository instructions in [`AGENTS.md`](../AGENTS.md).
 
-Planning and executable contract references will be added in their reserved directories as implementation begins. They must derive from the accepted baseline and must not introduce scope or architecture indirectly.
+The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md) sequences the accepted work and evidence. Executable contract references will be added as implementation begins. Both must derive from the accepted baseline and must not introduce scope or architecture indirectly.
 
 ---
 
@@ -83,7 +83,7 @@ An unlabelled historical input is not authoritative merely because it exists in 
 | Product | [Product Documentation Index](./product/README.md) | Accepted product scope, interaction behaviour, and release acceptance. |
 | Architecture | [Architecture Documentation Index](./architecture/README.md) | Accepted system ownership, domain flows, interfaces, security, testing, and operations. |
 | Decisions | [Architecture Decision Records](./adr/README.md) | Accepted decision history and rationale. |
-| Planning | `docs/planning/` | Reserved for implementation sequencing derived from accepted scope. |
+| Planning | [Planning Documentation Index](./planning/README.md) | Proposed implementation sequencing, decision gates, acceptance traceability, testing, and delivery risks derived from accepted scope. |
 | Contracts | `docs/contracts/` | Reserved for contract references backed by executable schemas and types. |
 
 Current specialised authority remains in architecture until a non-duplicative supplemental index is added:
@@ -104,7 +104,8 @@ Empty or reserved documentation directories are not evidence that an additional 
 2. [Product Documentation Index](./product/README.md).
 3. [Architecture Documentation Index](./architecture/README.md).
 4. [ADR index](./adr/README.md).
-5. [`AGENTS.md`](../AGENTS.md).
+5. [Planning Documentation Index](./planning/README.md).
+6. [`AGENTS.md`](../AGENTS.md).
 
 ## 6.2 Planning
 
@@ -119,7 +120,8 @@ Empty or reserved documentation directories are not evidence that an additional 
 2. The applicable accepted product requirement and acceptance criteria.
 3. The applicable architecture reading path.
 4. The applicable ADRs.
-5. The implementation plan and executable contracts when present.
+5. The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md).
+6. The executable contracts when present.
 
 ## 6.4 Testing and release
 
