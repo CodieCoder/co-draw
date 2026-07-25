@@ -1362,15 +1362,19 @@ The application should preserve Excalidraw’s native undo and redo experience.
 
 ### 23.2 Collaboration policy
 
-The exact collaborative undo model must be defined by the collaboration architecture.
+The accepted model is defined in [MVP collaborative undo policy](../architecture/02-collaboration-and-sync-design.md#151-mvp-collaborative-undo-policy).
 
 The user experience should avoid undoing unrelated remote work unexpectedly.
 
-Preferred behaviour:
+Required MVP behaviour:
 
 - Undo affects the local user’s supported recent actions.
+- The resulting authorised scene difference synchronises through the ordinary collaboration path.
+- Remote changes do not become unrelated local undo entries.
 - Remote changes are not globally reverted merely because another user presses Undo.
 - Product-specific custom metadata follows the associated scene action.
+- Same-element concurrent edits follow the accepted conflict model and may limit intention preservation.
+- Room-wide collaborative undo and durable history across reload are outside MVP scope.
 
 ⸻
 
@@ -1931,7 +1935,7 @@ The MVP may intentionally accept the following limitations:
 - Audio controls may use DOM overlays rather than native scene elements.
 - Remote selections may be simplified.
 - Offline asset uploads may require reconnection before placement completes.
-- Collaborative undo may be limited.
+- Undo history is client-local and non-durable; same-element concurrency may limit intention preservation.
 - Mini-map visuals may use bounding boxes rather than exact previews.
 - Radar distance may be approximate.
 - Replay may not be implemented.

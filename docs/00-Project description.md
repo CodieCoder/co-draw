@@ -1,3 +1,19 @@
+# Original Project Brief
+
+**Document path:** `docs/00-Project description.md`
+
+**Document status:** Superseded
+
+**Superseded by:**
+
+- [Product Requirements](./product/01-product-requirements.md)
+- [MVP Scope and Acceptance Criteria](./product/02-mvp-scope-and-acceptance-criteria.md)
+- [Canvas Interaction Specification](./product/03-canvas-interaction-specification.md)
+
+**Purpose:** Preserve the original challenge brief for provenance. This file is not authoritative for planning, implementation, testing, or release scope.
+
+---
+
 ## Real-time collaborative infinite Canvas.
 
 ## Task Description:

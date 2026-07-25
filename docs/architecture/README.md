@@ -23,6 +23,7 @@ The architecture implements the accepted product scope:
 
 Product scope is authoritative in:
 
+- [Product Documentation Index](../product/README.md)
 - [Product Requirements](../product/01-product-requirements.md)
 - [MVP Scope and Acceptance Criteria](../product/02-mvp-scope-and-acceptance-criteria.md)
 - [Canvas Interaction Specification](../product/03-canvas-interaction-specification.md)

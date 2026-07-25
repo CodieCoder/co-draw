@@ -1,5 +1,6 @@
 # resources
 /resources/*
+!/resources/README.md
 
 # node_modules
 /node_modules/*

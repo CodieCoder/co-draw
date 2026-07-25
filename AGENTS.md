@@ -10,6 +10,7 @@ The application uses Excalidraw as its drawing and interaction engine. It must n
 
 Before making architectural, planning, or implementation changes, read the relevant documents under:
 
+- `docs/README.md`
 - `docs/product/`
 - `docs/architecture/`
 - `docs/adr/`
@@ -17,11 +18,15 @@ Before making architectural, planning, or implementation changes, read the relev
 
 Start with:
 
+- `docs/README.md`
+- `docs/product/README.md`
 - `docs/product/01-product-requirements.md`
 - `docs/product/02-mvp-scope-and-acceptance-criteria.md`
 - `docs/architecture/01-system-architecture.md`
 
 Read additional documents related to the task before editing files.
+
+Files under `resources/` and the superseded `docs/00-Project description.md` are historical source material. They are non-authoritative and must not override accepted documentation.
 
 ## Core architectural decisions
 

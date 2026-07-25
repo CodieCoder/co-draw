@@ -644,11 +644,19 @@ Product metadata should be reconstructed after paste when required.
 
 # 33. Undo and redo
 
-Use native Excalidraw undo where possible.
+Use native Excalidraw undo and redo for supported client-local scene actions.
 
-The adapter should avoid creating duplicate history entries during remote scene application.
+The authoritative collaboration behaviour is defined in [MVP collaborative undo policy](./02-collaboration-and-sync-design.md#151-mvp-collaborative-undo-policy).
 
-Collaborative undo is outside the MVP scope.
+The adapter must:
+
+- Avoid creating a user-facing local history entry when applying remote scene state.
+- Avoid publishing a remote application back to Yjs.
+- Treat the valid result of a local undo or redo as an ordinary authorised scene difference.
+- Preserve associated product metadata when the scene action affects a product object.
+- Keep application actions such as role changes, archive, and asset upload outside Excalidraw history.
+
+Room-wide or intention-preserving collaborative undo is outside the MVP scope. If supported public Excalidraw APIs cannot preserve local history safely during remote application, the adapter must prefer resynchronisation and loss of the affected local undo entry over a duplicate or destructive shared write.
 
 ---
 
@@ -846,6 +854,7 @@ Cover:
 - Sticky-note composition
 - Audio-card composition
 - Callback suppression
+- Undo-origin classification and remote-history suppression
 - Normalization
 - Diff generation
 - File registration
@@ -858,6 +867,8 @@ Cover:
 
 - Initial load
 - Collaboration updates
+- Local undo and redo propagation
+- Remote updates excluded from unrelated local undo
 - Asset loading
 - Export
 - Offline restore
@@ -879,6 +890,7 @@ Verify:
 - Collaboration works
 - Remote edits appear once
 - Callback loops never occur
+- Supported local undo and redo converge without reversing unrelated remote work
 - Exports succeed
 - Offline recovery succeeds
 
@@ -905,6 +917,8 @@ The Excalidraw integration is complete when:
 - All scene mutations pass through the adapter.
 - Collaboration uses incremental updates.
 - Remote updates never create callback loops.
+- Remote updates do not become unrelated local undo entries.
+- Supported local undo and redo results follow the authorised collaboration path.
 - Sticky notes and audio cards retain metadata.
 - Assets resolve correctly.
 - Scene exports are privacy-safe.

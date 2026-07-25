@@ -603,6 +603,48 @@ Transaction origins help:
 - Distinguish physics from ordinary editing
 - Improve test assertions
 
+## 15.1 MVP collaborative undo policy
+
+The MVP uses Excalidraw's client-local history for supported visual scene actions.
+
+It does not introduce a room-wide undo stack, shared action log, or user-facing Yjs `UndoManager`. Yjs converges the durable result of an authorised undo or redo; it does not decide which user action should be reversed.
+
+State ownership is:
+
+- Excalidraw owns local undo grouping, redo availability, and keyboard behaviour.
+- The Excalidraw adapter distinguishes a local undo or redo result from a remote scene application and publishes only the resulting durable scene difference.
+- Yjs owns convergence after that difference is published as an ordinary `local-excalidraw` transaction.
+- The API and collaboration server remain authoritative for whether the client may publish.
+
+Required behaviour:
+
+1. A supported local Excalidraw scene action may enter that client's native undo history.
+2. Applying a remote Yjs update must not create a user-facing local history entry or a duplicate publication.
+3. When an authorised editor invokes undo or redo, the resulting valid scene difference follows the ordinary local-to-shared update path and becomes visible to other clients.
+4. Undo never means "reverse the last room transaction" and must not globally reverse an unrelated remote action.
+5. Same-element concurrent changes continue to use the accepted whole-element conflict model. The MVP does not promise intention-preserving undo when another client changed the same element after the local action.
+6. Product metadata associated with an affected Excalidraw element must remain valid and must be added, changed, or removed in the same Yjs transaction where the scene action requires it.
+7. Room archive, membership, permission, invitation, asset-upload, and other application actions do not enter Excalidraw's history.
+8. Local history is ephemeral. It is not stored in Yjs, Awareness, PostgreSQL, or the IndexedDB collaborative cache, and availability after reload, browser restart, or rejected-draft recovery is not an MVP guarantee.
+
+Permission and offline rules still apply:
+
+- Viewer mode must not expose a scene undo action that can publish.
+- A stale or modified client cannot use undo or redo to bypass collaboration-server write enforcement.
+- An offline undo or redo result is an ordinary local candidate. It may enter shared state only after current permission revalidation.
+- A rejected offline candidate remains local and recoverable under the accepted rejected-draft policy.
+
+If the adapter cannot apply remote state without corrupting local history, creating a callback loop, or publishing a compensating update, it must preserve the shared Yjs state, report a recoverable local-history limitation, and resynchronise the canvas. It may make the affected local undo entry unavailable; it must not invent a room-wide reversal.
+
+Mandatory verification:
+
+- Alice undoes and redoes a supported local scene action; Bob observes each resulting scene state and both clients retain the final state after reload.
+- Bob's unrelated remote element remains unchanged when Alice undoes her own supported action.
+- Applying Bob's update does not create a duplicate publication or cause Alice's next undo to reverse Bob's unrelated action.
+- A viewer or permission-revoked client cannot publish an undo result.
+- Associated product metadata remains valid after supported undo and redo.
+- An offline undo candidate follows the permission-revalidation and rejected-draft paths.
+
 ---
 
 # 16. Shared-to-local update algorithm
@@ -1635,6 +1677,7 @@ Mandatory release coverage:
 - Awareness validation
 - Conflict helpers
 - Feedback-loop prevention helpers
+- Local-history origin classification and remote-history suppression
 - Offline permission revalidation
 - Rejected-draft preservation
 
@@ -1656,6 +1699,8 @@ Mandatory release coverage:
 - Product metadata synchronisation
 - Persistence and reload
 - Viewer read-only connection
+- Local undo and redo propagation without reversing unrelated remote work
+- Remote scene application without duplicate publication or local-history capture
 - Offline local document recovery
 - Authorised offline reconciliation
 - Permission-revoked offline rejection and local recovery
@@ -1675,6 +1720,7 @@ Mandatory release coverage:
 - Alice creates a rectangle and Bob sees it.
 - Bob moves the rectangle and Alice sees the final position.
 - Both reload and see equivalent state.
+- Alice undoes and redoes a supported local action without reversing Bob's unrelated element.
 - Charlie as viewer cannot modify the room.
 - Offline Alice edits and later reconnects.
 - Permission-revoked offline draft is preserved.
@@ -1860,7 +1906,7 @@ The MVP deliberately accepts:
 
 - Same-element simultaneous property edits may overwrite one another.
 - Text is not merged character by character.
-- Collaborative undo may be limited.
+- Undo and redo are client-local and non-durable; same-element concurrency may limit intention preservation.
 - Scene order conflicts preserve convergence rather than every simultaneous intention.
 - P1 physics ownership may rely partly on cooperative client behaviour when that feature is enabled.
 - Asset availability may lag behind scene metadata briefly.

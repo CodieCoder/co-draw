@@ -208,6 +208,7 @@ Primary mandatory targets include:
 - Excalidraw scene normalisation and diff helpers.
 - Product-object metadata validation.
 - Callback-loop suppression.
+- Local-history origin classification and remote-history suppression.
 - Asset transitions, cache policy, and resource disposal.
 - Awareness allowlist validation.
 - Offline connection-state derivation.
@@ -217,7 +218,7 @@ Primary mandatory targets include:
 
 React component tests may verify product-owned controls through accessible roles and labels. They do not prove server permission enforcement or multi-client convergence.
 
-Native Excalidraw drawing, selection, resize, and internal undo behaviour are outside the unit-test scope unless the product adapter changes their integration.
+Native Excalidraw drawing, selection, resize, and internal history mechanics remain outside the unit-test scope. Product-owned undo-origin classification, remote-history suppression, publication, permissions, and convergence are inside the adapter and integration test scope.
 
 ---
 
@@ -233,6 +234,8 @@ Mandatory integration coverage includes:
 - Viewer read-only collaboration.
 - Yjs document load, persistence, and equivalent reload.
 - Two-client convergence and element-order normalisation.
+- Local undo and redo propagation without reversing unrelated remote work.
+- Remote application without local-history capture or duplicate publication.
 - Product metadata association.
 - Awareness validation and cleanup.
 - Authorised private asset upload and retrieval.
@@ -299,7 +302,7 @@ QA-Intel must not:
 | --- | --- | --- | --- |
 | Guest entry and sessions | Validation, normalisation, expiry, redaction. | Creation, restoration, invalid-session rejection. | Guest enters or restores a session without private data appearing in public surfaces. |
 | Rooms and invitations | Capability and share-link policy. | Atomic creation, owner membership, invite acceptance, role limits. | Alice creates a room; Bob joins through the supported share flow. |
-| Excalidraw integration | Scene normalisation, metadata mapping, callback suppression. | Adapter load, remote application, persistence reconstruction. | Native elements render, synchronise once, and remain after reload. |
+| Excalidraw integration | Scene normalisation, metadata mapping, callback suppression, undo-origin classification. | Adapter load, remote application, local undo and redo propagation, persistence reconstruction. | Native elements render, synchronise once, preserve unrelated remote work during undo, and remain after reload. |
 | Collaboration and presence | Conflict helpers, awareness validation, connection-state derivation. | Two-client convergence, read-only viewer, persistence, presence cleanup. | Alice and Bob converge; Charlie observes but cannot publish durable edits. |
 | Permissions and privacy | Role policy, allowlists, token and log redaction. | Server rejection, private asset isolation, email exclusion. | A modified viewer client still cannot write; private fields are absent from scene, awareness, public data, hooks, recovery output, and diagnostics. |
 | Images and audio | Lifecycle policy, mappings, media state transitions. | Upload authorisation, readiness, private resolution, failure paths. | Image sharing and reload work; recorded audio is visible and playable from another authorised client. |

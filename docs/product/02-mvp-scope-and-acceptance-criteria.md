@@ -1173,14 +1173,24 @@ Scenario: Editor changes element order
 
 ```gherkin
 Scenario: Editor undoes and redoes a supported action
-  Given Alice completed an undoable scene action
+  Given Alice and Bob are editing the same room
+  And Alice completed an undoable scene action
   When Alice invokes undo
-  Then the local scene should reflect the undone state according to the collaboration policy
+  Then Alice's local scene should reflect the supported undone state
+  And Bob should observe the resulting authorised scene state
   When Alice invokes redo
   Then the action should be restored where supported
+  And Bob should observe the restored scene state
+
+Scenario: Undo preserves unrelated remote work
+  Given Alice completed an undoable scene action
+  And Bob completed an unrelated scene action
+  When Alice invokes undo
+  Then Alice's supported action should be undone
+  And Bob's unrelated action should remain in the shared scene
 ```
 
-The exact collaborative undo policy must be documented before implementation.
+The accepted policy is defined in [MVP collaborative undo policy](../architecture/02-collaboration-and-sync-design.md#151-mvp-collaborative-undo-policy). The MVP uses client-local Excalidraw history and synchronises the resulting authorised scene difference. It does not provide room-wide or intention-preserving collaborative undo.
 
 ---
 
