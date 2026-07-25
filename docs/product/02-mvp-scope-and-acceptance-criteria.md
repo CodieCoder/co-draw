@@ -470,7 +470,9 @@ Scenario: Guest opens an unknown room link
 
 ---
 
-## P0-JOIN-004 — Archived room cannot be edited
+## P1-ARCHIVE-004 — Archived room cannot be edited
+
+This scenario is required when the optional P1 room-archive capability is implemented.
 
 ```gherkin
 Scenario: Editor opens an archived room link
@@ -1862,7 +1864,9 @@ Scenario: Editor attempts an unsupported upload
 
 ---
 
-## P0-SECURITY-004 — Archived room update is rejected
+## P1-ARCHIVE-005 — Archived room update is rejected
+
+This security scenario is required when the optional P1 room-archive capability is implemented.
 
 ```gherkin
 Scenario: Client sends an update to an archived room
