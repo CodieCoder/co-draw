@@ -53,9 +53,11 @@ New architecture documents remain `Proposed` until reviewed. Acceptance must be 
 |  05 | [Excalidraw Integration Design](./05-excalidraw-integration-design.md)                                 | Defines the adapter boundary and preserves Excalidraw as the sole canvas engine and canonical visual scene.                              | Accepted | 01, 02, canvas interaction specification |
 |  06 | [Frontend Architecture](./06-frontend-architecture.md)                                                 | Defines React ownership, routing, stores, feature boundaries, overlays, offline UI, and browser testability.                             | Accepted | 01, 02, 04, 05, 07                       |
 |  07 | [Realtime Presence and Awareness](./07-realtime-presence-and-awareness.md)                             | Defines public ephemeral presence, cursors, viewports, selections, privacy, and cleanup.                                                 | Accepted | 02, 06, security requirements            |
-|  08 | [Asset and Media Architecture](./08-asset-and-media-architecture.md)                                   | Defines private image and audio lifecycle, binary storage, stable references, resolution, failure handling, and testing.                 | Proposed | 01, 03, 04, 05, 06                       |
-|  09 | [Offline Sync and Recovery](./09-offline-sync-and-recovery.md)                                         | Defines the protected offline differentiator, reconnection gate, permission revalidation, reconciliation, and rejected drafts.           | Proposed | 01, 02, 03, 06, 08                       |
-|  10 | [Security, Permission, and Privacy Architecture](./10-security-permission-and-privacy-architecture.md) | Defines enforcement order across sessions, rooms, collaboration, awareness, assets, offline recovery, logs, and tests.                   | Proposed | 01–04, 07–09                             |
+|  08 | [Asset and Media Architecture](./08-asset-and-media-architecture.md)                                   | Defines private image and audio lifecycle, binary storage, stable references, resolution, failure handling, and testing.                 | Accepted | 01, 03, 04, 05, 06                       |
+|  09 | [Offline Sync and Recovery](./09-offline-sync-and-recovery.md)                                         | Defines the protected offline differentiator, reconnection gate, permission revalidation, reconciliation, and rejected drafts.           | Accepted | 01, 02, 03, 06, 08                       |
+|  10 | [Security, Permission, and Privacy Architecture](./10-security-permission-and-privacy-architecture.md) | Defines enforcement order across sessions, rooms, collaboration, awareness, assets, offline recovery, logs, and tests.                   | Accepted | 01–04, 07–09                             |
+|  11 | [Testing and Quality Strategy](./11-testing-and-quality-strategy.md)                                   | Defines risk-based TDD, test-level boundaries, mandatory and conditional coverage, stable hooks, QA-Intel evidence, and release quality. | Accepted | Product scope, 01–10                     |
+|  12 | [Deployment and Operational Readiness](./12-deployment-and-operational-readiness.md)                   | Defines deployable units, configuration, startup, health, observability, recovery, troubleshooting, and demo operations.                 | Accepted | 01, 03, 04, 08–11                        |
 
 ---
 
@@ -101,6 +103,25 @@ New architecture documents remain `Proposed` until reviewed. Acceptance must be 
 5. Asset and Media Architecture.
 6. Offline Sync and Recovery.
 
+## 4.6 Testing and release review
+
+1. MVP Scope and Acceptance Criteria.
+2. Testing and Quality Strategy.
+3. The affected domain architecture.
+4. Security, Permission, and Privacy Architecture.
+5. Deployment and Operational Readiness.
+
+## 4.7 Deployment and demo operations
+
+1. Deployment and Operational Readiness.
+2. System Architecture.
+3. Data Model and Persistence.
+4. API and Service Boundaries.
+5. Asset and Media Architecture.
+6. Offline Sync and Recovery.
+7. Security, Permission, and Privacy Architecture.
+8. Testing and Quality Strategy.
+
 ---
 
 # 5. Ownership hierarchy
@@ -135,16 +156,16 @@ Every architecture document must preserve:
 
 ---
 
-# 7. Acceptance-gated next batch
+# 7. ADR-creation acceptance gate
 
-The following documents are intentionally not created until documents 08–10 and this index are reviewed and accepted:
+The second readiness batch is accepted:
 
-```text
-11-testing-and-quality-strategy.md
-12-deployment-and-operational-readiness.md
-```
+- [Testing and Quality Strategy](./11-testing-and-quality-strategy.md) — Accepted.
+- [Deployment and Operational Readiness](./12-deployment-and-operational-readiness.md) — Accepted.
 
-Document 12 will include proportionate health checks, structured logging, diagnostics, failure response, and demo operations. A separate observability document is not planned for the two-day MVP.
+The acceptance gate is satisfied. ADRs may now be derived from the accepted architecture without introducing new decisions.
+
+Document 12 includes proportionate health checks, structured logging, diagnostics, failure response, and demo operations. A separate observability document is not planned for the two-day MVP.
 
 A standalone physics architecture document is deferred until P1 physics enters the protected delivery sequence. Existing accepted documents remain authoritative for its current boundary.
 
@@ -185,5 +206,5 @@ This index is complete when:
 - Dependencies point to existing documents.
 - Mandatory and conditional scope matches accepted product requirements.
 - The reading paths direct implementers to the correct authoritative sources.
-- The acceptance gate for documents 11–12 is explicit.
+- The acceptance gate before ADR creation is explicit.
 - `docs/adr/` is the only ADR directory named by current guidance.
