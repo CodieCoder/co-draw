@@ -2,17 +2,14 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    name: "@vega/collaboration",
+    name: "service-integration",
     globals: false,
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["tests/integration/**/*.integration.test.ts"],
+    fileParallelism: false,
     clearMocks: true,
     restoreMocks: true,
     unstubEnvs: true,
     unstubGlobals: true,
-    coverage: {
-      provider: "v8",
-      include: ["src/health.ts"],
-    },
   },
 });

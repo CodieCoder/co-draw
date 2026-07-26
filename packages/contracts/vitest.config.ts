@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    name: "@vega/collaboration",
+    name: "@vega/contracts",
     globals: false,
     environment: "node",
     include: ["src/**/*.test.ts"],
@@ -12,7 +12,8 @@ export default defineConfig({
     unstubGlobals: true,
     coverage: {
       provider: "v8",
-      include: ["src/health.ts"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts"],
     },
   },
 });

@@ -1,16 +1,16 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./packages/contracts" },
-    { "path": "./packages/excalidraw-adapter" },
-    { "path": "./packages/collaboration-schema" },
-    { "path": "./packages/canvas-extensions" },
-    { "path": "./packages/database" },
-    { "path": "./packages/auth" },
-    { "path": "./packages/config" },
-    { "path": "./packages/test-utils" },
-    { "path": "./apps/web" },
-    { "path": "./apps/api" },
-    { "path": "./apps/collaboration" }
+  "extends": "@vega/typescript-config/node-app.json",
+  "compilerOptions": {
+    "composite": false,
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "noEmit": true
+  },
+  "include": [
+    "playwright.config.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "reports"
   ]
 }

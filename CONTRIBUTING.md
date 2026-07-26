@@ -54,6 +54,8 @@ Run the focused gates for any area you change. Before handoff, also run:
 corepack pnpm db:migrate:status
 corepack pnpm infra:check
 corepack pnpm test:integration:foundation
+corepack pnpm test:integration
+corepack pnpm test:browser
 corepack pnpm smoke:apps
 corepack pnpm test:coverage
 corepack pnpm bundle:report
@@ -94,14 +96,36 @@ provider errors.
 
 ## Testing
 
-Stage 0 uses focused Vitest contract tests, a uniquely scoped infrastructure
-integration suite, and process/protocol smoke checks. Write negative-path tests
-for parsing, trust boundaries, redaction, health, fail-closed behaviour,
-dependency interruption, schema incompatibility, permission loss, recovery,
-and cleanup. The foundation integration script may create and remove only its
-generated `vega-canvas-it-*` Compose project. Browser automation and the
-general service-integration fixture foundation remain owned by `FND-004`; do
-not quietly claim them from the Stage 0B checks.
+Keep Vitest unit tests beside their source as `*.test.ts` or `*.test.tsx`.
+Place isolated service tests under `tests/integration/` with the
+`*.integration.test.ts` suffix and Playwright tests under `tests/browser/`
+with the `*.spec.ts` suffix. Tests import Vitest APIs explicitly; Node is the
+default environment; mock, environment, and global state are restored between
+tests.
+
+Use `@vega/test-utils` for the run-scoped Alice/owner, Bob/editor, and
+Charlie/viewer fixtures and for separate Playwright browser contexts.
+Synthetic role metadata is descriptive test setup, never client authority.
+Do not place actor email, IDs, or roles into application storage merely to
+simulate authentication.
+
+`test:integration`, `test:integration:foundation`, and `test:browser` create
+only unique `vega-canvas-it-*` projects and do not use `.env.local`. They clean
+their child processes, containers, networks, volumes, and temporary secret
+files on success, exceptions, `SIGINT`, and `SIGTERM`. Cleanup failures are
+test failures. Never weaken the strict project-name guard or replace it with a
+wildcard, global Docker prune, or developer-volume deletion.
+
+After an untrappable hard kill, confirm the owning test process is gone and
+run `corepack pnpm test:cleanup -- <exact-printed-project>`. The command accepts
+one exact generated project name, removes its labelled Docker resources and
+bound temporary environment, and rejects every other target.
+
+Write negative-path tests for parsing, trust boundaries, redaction, health,
+fail-closed behaviour, dependency interruption, schema incompatibility,
+permission loss, recovery, and cleanup. `check` is the fast static/unit gate;
+the two integration commands and browser smoke remain separate mandatory
+foundation gates.
 
 Use synthetic data only. Do not paste credentials or private application data
 into tests, snapshots, reports, or issue descriptions.

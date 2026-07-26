@@ -221,8 +221,9 @@ Focused tests must prove:
 - Fail-closed collaboration upgrades.
 
 The Stage 0B infrastructure integration test is a focused proof of this
-contract. It does not claim the general service-integration or Playwright
-foundation assigned to `FND-004`.
+contract. The implemented general service-integration and Playwright
+foundation is documented separately in the
+[General Testing Foundation](./03-general-testing-foundation.md).
 
 ---
 

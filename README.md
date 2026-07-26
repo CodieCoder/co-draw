@@ -1,11 +1,11 @@
 # Vega Canvas
 
 Vega Canvas is a real-time collaborative infinite-canvas application built
-around Excalidraw. This repository currently implements the Stage 0A and
-Stage 0B foundations: a reproducible monorepo, executable shared contracts,
+around Excalidraw. This repository currently implements the Stage 0A through
+Stage 0C foundations: a reproducible monorepo, executable shared contracts,
 three application shells, PostgreSQL and private S3-compatible local
-infrastructure, an ordered relational migration set, and truthful readiness
-endpoints that distinguish liveness from dependency health.
+infrastructure, an ordered relational migration set, truthful readiness, and
+isolated Vitest, service-integration, and Chromium Playwright foundations.
 
 The scaffold deliberately does **not** create rooms, sessions, or canvas
 state. API and collaboration liveness always return `200`. Readiness returns
@@ -21,6 +21,7 @@ server-authoritative controls planned for later stages exist.
 - Corepack
 - pnpm `11.17.0` (pinned by `packageManager`)
 - Docker Engine with Compose v2 (required for local PostgreSQL and MinIO)
+- Playwright Chromium when running browser tests
 - Google Chrome when running the Lighthouse performance gate
 
 With nvm:
@@ -57,6 +58,18 @@ corepack pnpm install --frozen-lockfile
 Use `corepack pnpm install` only when intentionally updating
 [`pnpm-lock.yaml`](./pnpm-lock.yaml). Exact external dependency versions live
 in the catalog in [`pnpm-workspace.yaml`](./pnpm-workspace.yaml).
+
+Install the pinned Playwright Chromium binary once per machine:
+
+```sh
+corepack pnpm exec playwright install chromium
+```
+
+On a Linux CI worker that also needs browser system packages:
+
+```sh
+corepack pnpm exec playwright install --with-deps chromium
+```
 
 ## Run the local foundation
 
@@ -100,9 +113,13 @@ non-private `COLLAB_PERMISSION_DENIED`. No Yjs room document is created.
 | `corepack pnpm typecheck` | Run strict TypeScript project checks |
 | `corepack pnpm lint` | Run flat ESLint rules and repository boundary checks |
 | `corepack pnpm test` | Run focused unit and contract suites |
+| `corepack pnpm test:unit` | Run the explicit Vitest unit-suite alias |
 | `corepack pnpm test:coverage` | Record coverage under workspace `coverage/` directories |
 | `corepack pnpm check` | Build, lint, typecheck, and test from the root |
+| `corepack pnpm test:integration` | Create an isolated stack, prove exception/SIGTERM cleanup, and run the general service integration suite |
 | `corepack pnpm test:integration:foundation` | Create an isolated stack and prove migrations, failures, recovery, permissions, and cleanup |
+| `corepack pnpm test:browser` | Create an isolated assembled stack and run the three-context Chromium smoke |
+| `corepack pnpm test:cleanup -- <exact-project>` | Remove one printed orphaned `vega-canvas-it-*` project and its temporary environment after an untrappable hard kill |
 | `corepack pnpm smoke:apps` | Launch built shells on isolated ports against local dependencies and verify protocols |
 | `corepack pnpm bundle:report` | Record web raw, gzip, and Brotli measurements |
 | `corepack pnpm performance:web` | Enforce Lighthouse performance, accessibility, and LCP gates |
@@ -110,8 +127,45 @@ non-private `COLLAB_PERMISSION_DENIED`. No Yjs room document is created.
 
 Generated caches and reports are ignored by Git. Bundle measurements are
 written to `reports/bundle/`; Lighthouse JSON is written to
-`reports/lighthouse/`. The foundation records bundle size without introducing a
-failing size budget.
+`reports/lighthouse/`; Playwright output is written below
+`reports/playwright/<run-id>/`. The foundation records bundle size without
+introducing a failing size budget.
+
+`check` is intentionally the fast build, lint, typecheck, and unit gate. Full
+foundation verification additionally runs both integration commands and
+`test:browser`.
+
+## Testing foundation
+
+Vitest unit tests stay beside their source as `*.test.ts` or `*.test.tsx`.
+Service tests live under `tests/integration/` as `*.integration.test.ts`;
+Playwright tests live under `tests/browser/` as `*.spec.ts`.
+
+`@vega/test-utils` owns the shared synthetic Alice/owner, Bob/editor, and
+Charlie/viewer fixtures and the helper that creates one non-persistent
+Playwright context per actor. The current browser smoke proves independent
+cookies and local storage plus accessible shell rendering. It does not
+authenticate the actors, inject roles into client state, or claim room,
+canvas, or collaboration behaviour.
+
+The integration and browser commands do not read `.env.local`. Each creates a
+unique `vega-canvas-it-<pid>-<suffix>` project, temporary mode-`0600`
+configuration, database, private bucket, ports, and release ID. Success,
+ordinary failure, `SIGINT`, and `SIGTERM` trigger exact-project cleanup.
+Cleanup failure makes the command fail.
+
+`SIGKILL` and host termination cannot be trapped. If either leaves an isolated
+project, confirm the owning process is no longer running and use only the
+exact project name printed by the failed run:
+
+```sh
+corepack pnpm test:cleanup -- vega-canvas-it-12345-a1b2c3d4
+```
+
+The cleanup command rejects every broader or malformed target and never
+operates on the persistent `vegait-hackerton` developer project. It removes
+only Docker resources with the exact Compose project label and generated
+temporary directories bound to that project name.
 
 ## Configuration
 
@@ -207,17 +261,21 @@ web dependency graph.
 - Collaboration readiness proves database and persistence capability, but no
   Yjs document load/save path exists and every upgrade remains denied.
 - Authentication and real room permission decisions remain unimplemented.
-- Broader service integration, Playwright, and synthetic multi-client testing
-  remain in `FND-004`.
+- The browser foundation has no guest-session, room, permission, canvas, Yjs,
+  IndexedDB, asset, or offline workflow to exercise yet.
+- The redacted non-production test API and its production-disable assertion
+  remain in `FND-005`.
 
-These are safe Stage 0B boundaries, not mocked product behaviour.
+These are safe Stage 0C boundaries, not mocked product behaviour.
 
 ## Documentation
 
 - [Documentation index](./docs/README.md)
 - [Foundation contract reference](./docs/contracts/01-foundation-contracts.md)
 - [Local persistence and readiness contract](./docs/contracts/02-local-persistence-and-readiness.md)
+- [General testing foundation contract](./docs/contracts/03-general-testing-foundation.md)
 - [Stage 0B implementation plan](./docs/planning/plans/0002-stage-0b-local-persistence-infrastructure-and-readiness.md)
+- [Stage 0C implementation plan](./docs/planning/plans/0004-stage-0c-general-testing-foundation.md)
 - [Contributing guide](./CONTRIBUTING.md)
 
 ## Troubleshooting
@@ -248,3 +306,10 @@ These are safe Stage 0B boundaries, not mocked product behaviour.
   absent from health responses.
 - **Lighthouse cannot find Chrome:** set `CHROME_PATH` to a local Chrome or
   Chromium executable.
+- **Playwright cannot launch Chromium:** run
+  `corepack pnpm exec playwright install chromium`. On Linux CI, use
+  `corepack pnpm exec playwright install --with-deps chromium`.
+- **An isolated test was hard-killed:** copy its exact printed
+  `vega-canvas-it-<pid>-<suffix>` name, confirm the owning process is gone,
+  then run `corepack pnpm test:cleanup -- <exact-project>`. Never use a
+  wildcard, Docker prune, or the developer project name.

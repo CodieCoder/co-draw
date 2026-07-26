@@ -51,7 +51,9 @@ export default [
     files: [
       "apps/**/*.{test,spec}.{ts,tsx}",
       "packages/**/*.{test,spec}.{ts,tsx}",
-      "packages/test-utils/**/*.{ts,tsx}"
+      "packages/test-utils/**/*.{ts,tsx}",
+      "tests/**/*.{ts,tsx}",
+      "playwright.config.ts"
     ],
     rules: {
       "no-restricted-imports": "off"

@@ -43,8 +43,9 @@ The current implementation-ready baseline consists of:
 
 The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md)
 sequences the accepted work and evidence. The proposed
-[foundation contract reference](./contracts/01-foundation-contracts.md) and
-[local persistence and readiness reference](./contracts/02-local-persistence-and-readiness.md)
+[foundation contract reference](./contracts/01-foundation-contracts.md),
+[local persistence and readiness reference](./contracts/02-local-persistence-and-readiness.md),
+and [general testing foundation](./contracts/03-general-testing-foundation.md)
 document executable Stage 0 representations. They derive from the accepted
 baseline and must not introduce scope or architecture indirectly.
 

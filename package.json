@@ -16,11 +16,15 @@
     "db:migrate": "node --env-file=.env.local --import tsx packages/database/src/migrate.ts",
     "db:migrate:status": "node --env-file=.env.local --import tsx packages/database/src/migrate-status.ts",
     "infra:check": "node --env-file=.env.local --import tsx apps/api/src/infra-check.ts",
+    "test:integration": "node scripts/test-integration.mjs",
     "test:integration:foundation": "node scripts/test-integration-foundation.mjs",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:cleanup": "node scripts/test-cleanup.mjs",
     "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint && eslint scripts eslint.config.js --max-warnings=0 && node scripts/verify-boundaries.mjs",
+    "typecheck": "turbo run build && turbo run typecheck && tsc --project tsconfig.json --pretty false",
+    "lint": "turbo run lint && eslint scripts tests playwright.config.ts eslint.config.js --max-warnings=0 && node scripts/verify-boundaries.mjs",
     "test": "turbo run test",
+    "test:unit": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "check": "pnpm build && pnpm lint && pnpm typecheck && pnpm test",
     "smoke:apps": "pnpm build && node scripts/smoke-apps.mjs",
@@ -29,12 +33,16 @@
     "docs:check": "node scripts/docs-check.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@types/node": "catalog:",
     "@vega/eslint-config": "workspace:*",
+    "@vega/test-utils": "workspace:*",
+    "@vega/typescript-config": "workspace:*",
     "eslint": "catalog:",
     "lighthouse": "catalog:",
     "tsx": "catalog:",
     "turbo": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
