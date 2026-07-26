@@ -14,6 +14,7 @@ describe("foundation status shell", () => {
             apiBaseUrl: "http://localhost:4000",
             collaborationUrl: "ws://localhost:1234",
             releaseId: "test-release",
+            testApiEnabled: false,
           },
         }}
       />,

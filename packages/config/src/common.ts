@@ -4,6 +4,7 @@ export type RawEnvironment = Readonly<Record<string, string | undefined>>;
 export type ApplicationProfile = "local" | "demo" | "production";
 
 export type ConfigurationIssueCode =
+  | "INCOMPATIBLE_PROFILE"
   | "INVALID_FORMAT"
   | "INVALID_ORIGIN"
   | "INVALID_PORT"

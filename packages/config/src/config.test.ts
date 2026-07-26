@@ -27,6 +27,7 @@ describe("configuration contracts", () => {
       apiBaseUrl: "http://localhost:4000",
       collaborationUrl: "ws://localhost:1234",
       releaseId: "local-dev",
+      testApiEnabled: false,
     });
     expect(parseApiConfiguration(apiEnv)).toMatchObject({
       profile: "local",
@@ -377,5 +378,84 @@ describe("configuration contracts", () => {
         OBJECT_STORAGE_REGION: "US East 1",
       }),
     ).toThrow(ConfigurationError);
+  });
+
+  // -----------------------------------------------------------------------
+  // FND-005 — Non-production canvas test API configuration
+  // -----------------------------------------------------------------------
+
+  it("defaults testApiEnabled to false", () => {
+    expect(
+      parseWebConfiguration({}).testApiEnabled,
+    ).toBe(false);
+  });
+
+  it("accepts explicit local enablement of test API", () => {
+    expect(
+      parseWebConfiguration({
+        VITE_CANVAS_TEST_API_ENABLED: "true",
+      }).testApiEnabled,
+    ).toBe(true);
+
+    expect(
+      parseWebConfiguration({
+        VITE_CANVAS_TEST_API_ENABLED: "1",
+      }).testApiEnabled,
+    ).toBe(true);
+  });
+
+  it("accepts explicit local disablement of test API", () => {
+    expect(
+      parseWebConfiguration({
+        VITE_CANVAS_TEST_API_ENABLED: "false",
+      }).testApiEnabled,
+    ).toBe(false);
+
+    expect(
+      parseWebConfiguration({
+        VITE_CANVAS_TEST_API_ENABLED: "0",
+      }).testApiEnabled,
+    ).toBe(false);
+  });
+
+  it("rejects invalid boolean spellings for test API", () => {
+    expect(() =>
+      parseWebConfiguration({
+        VITE_CANVAS_TEST_API_ENABLED: "yes",
+      }),
+    ).toThrow(ConfigurationError);
+  });
+
+  it("rejects test API enablement under production profile", () => {
+    try {
+      parseWebConfiguration({
+        VITE_APP_PROFILE: "production",
+        VITE_API_BASE_URL: "https://api.example.test",
+        VITE_COLLABORATION_URL: "wss://collab.example.test",
+        VITE_RELEASE_ID: "production-1",
+        VITE_CANVAS_TEST_API_ENABLED: "true",
+      });
+      throw new Error("Expected parsing to fail.");
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(ConfigurationError);
+      const safeError = error as ConfigurationError;
+      expect(safeError.issues).toEqual([
+        { path: "VITE_CANVAS_TEST_API_ENABLED", code: "INCOMPATIBLE_PROFILE" },
+      ]);
+      expect(safeError.message).not.toContain("production");
+      expect(safeError.message).not.toContain("true");
+    }
+  });
+
+  it("accepts disabled test API under production profile", () => {
+    expect(
+      parseWebConfiguration({
+        VITE_APP_PROFILE: "production",
+        VITE_API_BASE_URL: "https://api.example.test",
+        VITE_COLLABORATION_URL: "wss://collab.example.test",
+        VITE_RELEASE_ID: "production-1",
+        VITE_CANVAS_TEST_API_ENABLED: "false",
+      }).testApiEnabled,
+    ).toBe(false);
   });
 });

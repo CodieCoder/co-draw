@@ -127,6 +127,13 @@ permission loss, recovery, and cleanup. `check` is the fast static/unit gate;
 the two integration commands and browser smoke remain separate mandatory
 foundation gates.
 
+The `test:browser` command runs a two-phase suite that verifies the
+`window.__CANVAS_TEST_API__` global is absent in production builds and present
+with an exact foundation snapshot in Vite test-mode builds. The test API
+requires both `VITE_CANVAS_TEST_API_ENABLED=true` and a non-production Vite
+build mode. Production builds always omit the initializer regardless of the
+environment flag.
+
 Use synthetic data only. Do not paste credentials or private application data
 into tests, snapshots, reports, or issue descriptions.
 

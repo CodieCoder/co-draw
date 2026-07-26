@@ -384,9 +384,10 @@ class IsolatedTestStack {
     label,
     expectedExitCodes = [0],
     stdio = "inherit",
+    extraEnv = {},
   ) {
     return execute(executable, arguments_, {
-      env: this.environment,
+      env: { ...this.environment, ...extraEnv },
       expectedExitCodes,
       label,
       stdio,
@@ -400,9 +401,10 @@ class IsolatedTestStack {
     label,
     expectedExitCodes = [0],
     stdio = "inherit",
+    extraEnv = {},
   ) {
     return execute(executable, arguments_, {
-      env: this.publicEnvironment,
+      env: { ...this.publicEnvironment, ...extraEnv },
       expectedExitCodes,
       label,
       stdio,
@@ -709,6 +711,12 @@ class IsolatedTestStack {
       `isolated ${service} restore`,
     );
     await this.waitForHealthy(service);
+  }
+
+  async stopApplications() {
+    const children = [...this.applicationProcesses];
+    await Promise.all(children.map(terminateChild));
+    this.applicationProcesses.clear();
   }
 
   async cleanup() {

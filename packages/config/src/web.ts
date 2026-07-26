@@ -1,4 +1,6 @@
 import {
+  ConfigurationError,
+  readBoolean,
   readProfile,
   readReleaseId,
   readUrl,
@@ -6,19 +8,37 @@ import {
   type RawEnvironment,
 } from "./common.js";
 
-export { ConfigurationError, type ConfigurationIssue } from "./common.js";
+export {
+  ConfigurationError,
+  type ApplicationProfile,
+  type ConfigurationIssue,
+} from "./common.js";
 
 export interface WebConfiguration {
   readonly profile: ApplicationProfile;
   readonly apiBaseUrl: string;
   readonly collaborationUrl: string;
   readonly releaseId: string;
+  readonly testApiEnabled: boolean;
 }
 
 export const parseWebConfiguration = (
   raw: RawEnvironment,
 ): WebConfiguration => {
   const profile = readProfile(raw, "VITE_APP_PROFILE");
+
+  const testApiEnabled = readBoolean(
+    raw,
+    "VITE_CANVAS_TEST_API_ENABLED",
+    profile,
+    false,
+  );
+
+  if (testApiEnabled && profile === "production") {
+    throw new ConfigurationError([
+      { path: "VITE_CANVAS_TEST_API_ENABLED", code: "INCOMPATIBLE_PROFILE" },
+    ]);
+  }
 
   return {
     profile,
@@ -39,5 +59,6 @@ export const parseWebConfiguration = (
       "wss:",
     ),
     releaseId: readReleaseId(raw, "VITE_RELEASE_ID", profile),
+    testApiEnabled,
   };
 };

@@ -11,9 +11,20 @@ import "./styles/global.css";
 
 const resolveConfigurationState = (): WebConfigurationState => {
   try {
+    const configuration = parseWebConfiguration(import.meta.env);
+
+    if (
+      (typeof __VITE_CANVAS_TEST_API_ENABLED__ !== "undefined"
+        ? __VITE_CANVAS_TEST_API_ENABLED__
+        : false) &&
+      configuration.testApiEnabled
+    ) {
+      void import("./canvas-test-api/hook.js");
+    }
+
     return {
       status: "ready",
-      configuration: parseWebConfiguration(import.meta.env),
+      configuration,
     };
   } catch (error: unknown) {
     const issues: readonly ConfigurationIssue[] =

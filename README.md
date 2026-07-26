@@ -181,6 +181,7 @@ values.
 | `VITE_API_BASE_URL` | `http://localhost:4000` | Explicit `https:` URL |
 | `VITE_COLLABORATION_URL` | `ws://localhost:1234` | Explicit `wss:` URL |
 | `VITE_RELEASE_ID` | `local-dev` | Explicit bounded identifier |
+| `VITE_CANVAS_TEST_API_ENABLED` | `false` | Rejected under production profile |
 
 Only `VITE_` public fields enter the browser build.
 
@@ -263,8 +264,9 @@ web dependency graph.
 - Authentication and real room permission decisions remain unimplemented.
 - The browser foundation has no guest-session, room, permission, canvas, Yjs,
   IndexedDB, asset, or offline workflow to exercise yet.
-- The redacted non-production test API and its production-disable assertion
-  remain in `FND-005`.
+- The redacted non-production test API (`window.__CANVAS_TEST_API__`) is
+  implemented for FND-005 and is available only in non-production Vite builds
+  with `VITE_CANVAS_TEST_API_ENABLED=true`.
 
 These are safe Stage 0C boundaries, not mocked product behaviour.
 
@@ -274,8 +276,10 @@ These are safe Stage 0C boundaries, not mocked product behaviour.
 - [Foundation contract reference](./docs/contracts/01-foundation-contracts.md)
 - [Local persistence and readiness contract](./docs/contracts/02-local-persistence-and-readiness.md)
 - [General testing foundation contract](./docs/contracts/03-general-testing-foundation.md)
+- [Non-production canvas inspection API contract](./docs/contracts/04-non-production-canvas-test-api.md)
 - [Stage 0B implementation plan](./docs/planning/plans/0002-stage-0b-local-persistence-infrastructure-and-readiness.md)
 - [Stage 0C implementation plan](./docs/planning/plans/0004-stage-0c-general-testing-foundation.md)
+- [Stage 0D implementation plan](./docs/planning/plans/0005-stage-0d-non-production-canvas-test-api.md)
 - [Contributing guide](./CONTRIBUTING.md)
 
 ## Troubleshooting
@@ -309,6 +313,14 @@ These are safe Stage 0C boundaries, not mocked product behaviour.
 - **Playwright cannot launch Chromium:** run
   `corepack pnpm exec playwright install chromium`. On Linux CI, use
   `corepack pnpm exec playwright install --with-deps chromium`.
+- **Test API is absent in production or default builds:**
+  `VITE_CANVAS_TEST_API_ENABLED=true` and a non-production Vite build mode
+  (`vite build --mode test`) are both required. Production builds always omit
+  the test API regardless of the environment variable.
+- **`VITE_CANVAS_TEST_API_ENABLED` causes a configuration error under
+  production profile:** this is by design. The test API must not be enabled in
+  production builds, and the configuration validation rejects it with a
+  redacted `INCOMPATIBLE_PROFILE` error.
 - **An isolated test was hard-killed:** copy its exact printed
   `vega-canvas-it-<pid>-<suffix>` name, confirm the owning process is gone,
   then run `corepack pnpm test:cleanup -- <exact-project>`. Never use a
