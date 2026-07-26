@@ -16,12 +16,12 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
     },
     server: {
-      host: "127.0.0.1",
+      host: "localhost",
       port: 5_173,
       strictPort: true,
     },
     preview: {
-      host: "127.0.0.1",
+      host: "localhost",
       port: 5_173,
       strictPort: true,
     },

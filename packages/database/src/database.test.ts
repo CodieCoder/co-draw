@@ -43,8 +43,9 @@ describe("schema version", () => {
       "002_runtime-grants",
       "003_collab-select-grants",
       "004_stage-0b-corrections",
+      "005_api-initial-snapshot-grant",
     ]);
-    expect(SUPPORTED_SCHEMA_VERSION).toBe(4);
+    expect(SUPPORTED_SCHEMA_VERSION).toBe(5);
     expect(() => {
       (SUPPORTED_MIGRATIONS as string[]).push("005_extra");
     }).toThrow();

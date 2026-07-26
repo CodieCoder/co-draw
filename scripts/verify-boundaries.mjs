@@ -130,6 +130,45 @@ const files = [
   ...(await sourceFiles("packages")),
 ];
 const violations = [];
+const turboConfiguration = await readJson(join(root, "turbo.json"));
+const requiredDevEnvironment = new Set([
+  "ALLOWED_WEB_ORIGINS",
+  "API_DATABASE_URL",
+  "API_HOST",
+  "API_PORT",
+  "APP_PROFILE",
+  "COLLABORATION_DATABASE_URL",
+  "COLLABORATION_HOST",
+  "COLLABORATION_PORT",
+  "COLLABORATION_SIGNING_SECRET",
+  "COLLABORATION_URL",
+  "NODE_ENV",
+  "OBJECT_STORAGE_ACCESS_KEY",
+  "OBJECT_STORAGE_BUCKET",
+  "OBJECT_STORAGE_ENDPOINT",
+  "OBJECT_STORAGE_FORCE_PATH_STYLE",
+  "OBJECT_STORAGE_REGION",
+  "OBJECT_STORAGE_SECRET_KEY",
+  "RELEASE_ID",
+  "SUPPORTED_EXCALIDRAW_VERSION",
+  "VITE_API_BASE_URL",
+  "VITE_APP_PROFILE",
+  "VITE_CANVAS_TEST_API_ENABLED",
+  "VITE_COLLABORATION_URL",
+  "VITE_RELEASE_ID",
+]);
+const forwardedDevEnvironment = new Set(
+  turboConfiguration.tasks?.dev?.env ?? [],
+);
+const missingDevEnvironment = [...requiredDevEnvironment].filter(
+  (field) => !forwardedDevEnvironment.has(field),
+);
+
+if (missingDevEnvironment.length > 0) {
+  violations.push(
+    `turbo.json: dev task does not forward ${missingDevEnvironment.join(", ")}`,
+  );
+}
 
 for (const path of files) {
   const source = await readFile(path, "utf8");

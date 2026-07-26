@@ -7,6 +7,8 @@ import { parseWebConfiguration } from "./web.js";
 
 const apiEnv = {
   API_DATABASE_URL: "postgresql://api-user:secret@localhost:5432/vega",
+  COLLABORATION_URL: "ws://localhost:1234",
+  COLLABORATION_SIGNING_SECRET: "a-test-signing-secret-at-least-32-bytes-ok",
   OBJECT_STORAGE_ENDPOINT: "http://localhost:9000",
   OBJECT_STORAGE_REGION: "us-east-1",
   OBJECT_STORAGE_BUCKET: "vega-canvas-local",
@@ -18,6 +20,7 @@ const apiEnv = {
 const collabEnv = {
   COLLABORATION_DATABASE_URL:
     "postgresql://collab-user:secret@localhost:5432/vega",
+  COLLABORATION_SIGNING_SECRET: "a-test-signing-secret-at-least-32-bytes-ok",
 };
 
 describe("configuration contracts", () => {
@@ -116,6 +119,21 @@ describe("configuration contracts", () => {
       parseCollaborationConfiguration({
         ...collabEnv,
         SUPPORTED_EXCALIDRAW_VERSION: "0.18.0",
+      }),
+    ).toThrow(ConfigurationError);
+  });
+
+  it("requires a collaboration signing secret of at least 32 bytes", () => {
+    expect(() =>
+      parseApiConfiguration({
+        ...apiEnv,
+        COLLABORATION_SIGNING_SECRET: "too-short",
+      }),
+    ).toThrow(ConfigurationError);
+    expect(() =>
+      parseCollaborationConfiguration({
+        ...collabEnv,
+        COLLABORATION_SIGNING_SECRET: "too-short",
       }),
     ).toThrow(ConfigurationError);
   });
@@ -274,6 +292,8 @@ describe("configuration contracts", () => {
         OBJECT_STORAGE_ACCESS_KEY: "prod-key",
         OBJECT_STORAGE_SECRET_KEY: "prod-secret",
         OBJECT_STORAGE_FORCE_PATH_STYLE: "false",
+        COLLABORATION_URL: "wss://collab.example.test",
+        COLLABORATION_SIGNING_SECRET: "production-signing-secret-at-least-32-bytes!",
       }),
     ).not.toThrow();
   });

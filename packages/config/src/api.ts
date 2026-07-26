@@ -8,8 +8,10 @@ import {
   readPostgresUrl,
   readProfile,
   readReleaseId,
+  readRequiredSecret,
   readS3Endpoint,
   readS3Region,
+  readText,
   type ApplicationProfile,
   type RawEnvironment,
 } from "./common.js";
@@ -23,6 +25,8 @@ export interface ApiConfiguration {
   readonly allowedWebOrigins: readonly string[];
   readonly releaseId: string;
   readonly databaseUrl: string;
+  readonly collaborationUrl: string;
+  readonly collaborationSigningSecret: string;
   readonly objectStorageEndpoint: string;
   readonly objectStorageRegion: string;
   readonly objectStorageBucket: string;
@@ -43,6 +47,13 @@ export const parseApiConfiguration = (
     allowedWebOrigins: readOrigins(raw, "ALLOWED_WEB_ORIGINS", profile),
     releaseId: readReleaseId(raw, "RELEASE_ID", profile),
     databaseUrl: readPostgresUrl(raw, "API_DATABASE_URL", profile),
+    collaborationUrl: readText(raw, "COLLABORATION_URL", profile, "ws://localhost:1234"),
+    collaborationSigningSecret: readRequiredSecret(
+      raw,
+      "COLLABORATION_SIGNING_SECRET",
+      profile,
+      32,
+    ),
     objectStorageEndpoint: readS3Endpoint(
       raw,
       "OBJECT_STORAGE_ENDPOINT",

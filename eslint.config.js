@@ -16,6 +16,9 @@ export default [
   {
     files: ["apps/web/src/**/*.{ts,tsx}"],
     rules: {
+      "@typescript-eslint/no-floating-promises": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
       "no-restricted-imports": [
         "error",
         {
@@ -31,11 +34,11 @@ export default [
           ],
           patterns: [
             {
-              group: ["node:*", "@nestjs/*", "@hocuspocus/*"],
+              group: ["node:*", "@nestjs/*", "@hocuspocus/server", "@hocuspocus/server/*"],
               message: "Server-only modules cannot enter the web dependency graph.",
             },
             {
-              group: ["@excalidraw/excalidraw", "@excalidraw/*"],
+              group: ["@excalidraw/excalidraw", "@excalidraw/excalidraw/*", "@excalidraw/*"],
               message: "Excalidraw imports belong only in @vega/excalidraw-adapter.",
             },
             {

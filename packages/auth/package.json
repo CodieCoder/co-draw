@@ -12,10 +12,18 @@
   "scripts": {
     "build": "tsc -b",
     "lint": "eslint src --max-warnings=0",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@vega/contracts": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "@vega/typescript-config": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

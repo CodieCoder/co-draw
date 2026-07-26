@@ -6,6 +6,7 @@ import {
   readPostgresUrl,
   readProfile,
   readReleaseId,
+  readRequiredSecret,
   readText,
   type ApplicationProfile,
   type RawEnvironment,
@@ -21,6 +22,7 @@ export interface CollaborationConfiguration {
   readonly releaseId: string;
   readonly supportedExcalidrawVersion: "0.18.1";
   readonly databaseUrl: string;
+  readonly collaborationSigningSecret: string;
 }
 
 export const parseCollaborationConfiguration = (
@@ -51,5 +53,11 @@ export const parseCollaborationConfiguration = (
     releaseId: readReleaseId(raw, "RELEASE_ID", profile),
     supportedExcalidrawVersion,
     databaseUrl: readPostgresUrl(raw, "COLLABORATION_DATABASE_URL", profile),
+    collaborationSigningSecret: readRequiredSecret(
+      raw,
+      "COLLABORATION_SIGNING_SECRET",
+      profile,
+      32,
+    ),
   };
 };

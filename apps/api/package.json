@@ -17,6 +17,8 @@
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",
+    "@vega/auth": "workspace:*",
+    "@vega/collaboration-schema": "workspace:*",
     "@vega/config": "workspace:*",
     "@vega/contracts": "workspace:*",
     "@vega/database": "workspace:*",

@@ -10,7 +10,33 @@
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "NODE_ENV",
+        "APP_PROFILE",
+        "RELEASE_ID",
+        "API_HOST",
+        "API_PORT",
+        "ALLOWED_WEB_ORIGINS",
+        "API_DATABASE_URL",
+        "COLLABORATION_URL",
+        "COLLABORATION_SIGNING_SECRET",
+        "OBJECT_STORAGE_ENDPOINT",
+        "OBJECT_STORAGE_REGION",
+        "OBJECT_STORAGE_BUCKET",
+        "OBJECT_STORAGE_ACCESS_KEY",
+        "OBJECT_STORAGE_SECRET_KEY",
+        "OBJECT_STORAGE_FORCE_PATH_STYLE",
+        "COLLABORATION_HOST",
+        "COLLABORATION_PORT",
+        "COLLABORATION_DATABASE_URL",
+        "SUPPORTED_EXCALIDRAW_VERSION",
+        "VITE_APP_PROFILE",
+        "VITE_API_BASE_URL",
+        "VITE_COLLABORATION_URL",
+        "VITE_RELEASE_ID",
+        "VITE_CANVAS_TEST_API_ENABLED"
+      ]
     },
     "lint": {
       "dependsOn": ["^build"],

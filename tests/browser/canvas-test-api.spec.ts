@@ -22,7 +22,7 @@ const snapshotSchema = {
   canvas: { status: "not-mounted" },
   room: null,
   scene: null,
-  collaboration: { status: "not-configured" },
+  collaboration: { status: "disconnected" },
   persistence: { status: "not-configured" },
 };
 
@@ -38,12 +38,12 @@ test("canvas test API presence matches phase expectation", async ({ page }) => {
     }
   });
 
-  await page.goto(baseUrl);
+  await page.goto(`${baseUrl}/guest`);
 
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "The foundation is online.",
+      name: "Create a private guest identity",
     }),
   ).toBeVisible();
 

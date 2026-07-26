@@ -37,10 +37,11 @@ Included:
 - Exception, `SIGINT`, and `SIGTERM` cleanup.
 - A guarded exact-project cleanup command for untrappable termination.
 
-Excluded:
+Excluded from the general foundation smoke:
 
-- Guest sessions, rooms, memberships, or permission implementation.
-- Excalidraw mounting, Yjs room collaboration, or IndexedDB recovery.
+- Full guest/session/room/collaboration acceptance, which is covered by
+  `corepack pnpm test:browser:collaboration`.
+- IndexedDB recovery and broader post-demo product scenarios.
 - Test-only canvas inspection hooks owned by `FND-005`.
 - Firefox, WebKit, QA-Intel, media, offline, or product acceptance scenarios.
 - A provider-specific CI workflow.
@@ -54,7 +55,8 @@ Excluded:
 | Unit | Colocated `*.test.ts` or `*.test.tsx` | `corepack pnpm test:unit` | Deterministic contracts, policy, mapping, lifecycle, and fixture behaviour. |
 | Service integration | `tests/integration/**/*.integration.test.ts` | `corepack pnpm test:integration` | Real built API and collaboration processes against isolated PostgreSQL and MinIO. |
 | Foundation regression | Root orchestration script | `corepack pnpm test:integration:foundation` | Stage 0B migration, privacy, interruption, recovery, and fail-closed guarantees. |
-| Browser smoke | `tests/browser/**/*.spec.ts` | `corepack pnpm test:browser` | Assembled shell, three isolated contexts, browser-storage separation, and diagnostics. |
+| Browser smoke | `tests/browser/**/*.spec.ts` | `corepack pnpm test:browser` | Guest entry, three isolated contexts, browser-storage separation, test-API boundary, and diagnostics. |
+| Collaboration acceptance | Root Playwright orchestration | `corepack pnpm test:browser:collaboration` | Two private guests create/share/join, synchronize a rectangle, and recover after collaboration restart/reload. |
 
 Vitest tests import APIs explicitly and use `globals: false`. Node is the
 default environment. Test configurations clear and restore mocks and unstub
@@ -154,12 +156,13 @@ uses Chromium with:
 The smoke creates separate Alice, Bob, and Charlie contexts. It proves:
 
 - Independent cookies and local storage.
-- The built foundation shell renders its accessible status headings.
-- The shell still states that no room or scene is created.
+- The built guest entry route renders accessible identity fields.
+- The production/test-mode inspection API boundary remains enforced.
 - No unexpected browser console error or page error occurs.
 
-It does not simulate login, set a client role, mount Excalidraw, connect a room
-document, or prove collaboration.
+It does not inject a client role or mutate application state. The separate
+focused collaboration command performs the supported UI workflow and derives
+authority from the API and collaboration server.
 
 ---
 

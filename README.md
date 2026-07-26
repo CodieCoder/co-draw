@@ -1,20 +1,16 @@
 # Vega Canvas
 
 Vega Canvas is a real-time collaborative infinite-canvas application built
-around Excalidraw. This repository currently implements the complete Stage 0A
-through Stage 0E execution foundations: a reproducible monorepo, executable
-shared contracts, three application shells, PostgreSQL and private
-S3-compatible local infrastructure, an ordered relational migration set,
-truthful readiness, isolated Vitest, service-integration, and Chromium
-Playwright foundations, a non-production canvas inspection API boundary, and
-clean-environment onboarding with continuous validation.
+around Excalidraw. The repository includes the Stage 0 execution foundations
+and a focused Stage 1/2 demo slice: private guest sessions, room creation,
+editor invitations, authenticated Yjs/Hocuspocus collaboration, PostgreSQL
+snapshot recovery, and a two-browser Excalidraw rectangle workflow.
 
-The scaffold deliberately does **not** create rooms, sessions, or canvas
-state. API and collaboration liveness always return `200`. Readiness returns
-exact `200 ready` when PostgreSQL, schema, and object-storage dependencies
-are healthy, and exact `503` dependency/code pairs when they are not. Every
-collaboration upgrade is rejected with `403 COLLAB_PERMISSION_DENIED` until
-server-authoritative controls planned for later stages exist.
+API and collaboration liveness remain dependency-independent. Readiness
+returns exact `200 ready` when PostgreSQL, schema, persistence, and
+object-storage dependencies are healthy, and typed `503` responses when they
+are not. Collaboration access is authorized from the signed bootstrap token
+and revalidated against the current server-side session, room, and membership.
 
 ## Prerequisites
 
@@ -73,7 +69,7 @@ On a Linux CI worker that also needs browser system packages:
 corepack pnpm exec playwright install --with-deps chromium
 ```
 
-## Run the local foundation
+## Run the local demo
 
 ```sh
 cp .env.example .env.local
@@ -88,17 +84,19 @@ The committed example is intentionally unusable. `infra:up`, migration, check,
 smoke, and development commands all load the same ignored `.env.local` file.
 Ordinary `infra:down` preserves PostgreSQL and MinIO data volumes.
 
-| Runtime | Default address | Stage 0B behaviour |
+| Runtime | Default address | Current behaviour |
 | --- | --- | --- |
-| Web | `http://127.0.0.1:5173` | Accessible public-configuration status only |
-| API | `http://127.0.0.1:4000` | Liveness is dependency-independent; readiness checks database, schema, and private object storage |
-| Collaboration | `http://127.0.0.1:1234` | Liveness and readiness use HTTP; every WebSocket upgrade fails closed |
+| Web | `http://localhost:5173` | Guest entry, room creation, invite acceptance, and the shared Excalidraw room |
+| API | `http://localhost:4000` | Guest/session, room, share-link, collaboration-bootstrap, liveness, and readiness endpoints |
+| Collaboration | `ws://localhost:1234` | Authenticated Hocuspocus documents with server-derived write authority and debounced snapshot persistence |
 | PostgreSQL | `127.0.0.1:5433` | Persistent local database with separate migration, API, and collaboration roles |
 | MinIO API | `http://127.0.0.1:9000` | Private S3-compatible bucket with a bucket-scoped API credential |
 | MinIO console | `http://127.0.0.1:9001` | Local administration only |
 
-The collaboration rejection reason is the stable,
-non-private `COLLAB_PERMISSION_DENIED`. No Yjs room document is created.
+Open the web URL, create a private guest identity, create a room, and use
+**Create share link** in a second private browser context to exercise the
+two-editor demo. Missing, expired, revoked, archived, or mismatched authority
+fails closed without creating or exposing a room document.
 
 ## Root commands
 
@@ -121,6 +119,7 @@ non-private `COLLAB_PERMISSION_DENIED`. No Yjs room document is created.
 | `corepack pnpm test:integration` | Create an isolated stack, prove exception/SIGTERM cleanup, and run the general service integration suite |
 | `corepack pnpm test:integration:foundation` | Create an isolated stack and prove migrations, failures, recovery, permissions, and cleanup |
 | `corepack pnpm test:browser` | Create an isolated assembled stack and run the three-context Chromium smoke |
+| `corepack pnpm test:browser:collaboration` | Prove the complete two-editor create/share/join/draw/move/restart/reload workflow |
 | `corepack pnpm test:cleanup -- <exact-project>` | Remove one printed orphaned `vega-canvas-it-*` project and its temporary environment after an untrappable hard kill |
 | `corepack pnpm smoke:apps` | Launch built shells on isolated ports against local dependencies and verify protocols |
 | `corepack pnpm bundle:report` | Record web raw, gzip, and Brotli measurements |
@@ -164,10 +163,12 @@ Playwright tests live under `tests/browser/` as `*.spec.ts`.
 
 `@vega/test-utils` owns the shared synthetic Alice/owner, Bob/editor, and
 Charlie/viewer fixtures and the helper that creates one non-persistent
-Playwright context per actor. The current browser smoke proves independent
-cookies and local storage plus accessible shell rendering. It does not
-authenticate the actors, inject roles into client state, or claim room,
-canvas, or collaboration behaviour.
+Playwright context per actor. The general browser smoke proves independent
+cookies and local storage, the guest entry route, the non-production
+inspection boundary, and clean diagnostics. The focused collaboration browser
+test creates two guests through the UI, derives roles from server state, and
+proves rectangle convergence and recovery after a real collaboration-runtime
+restart.
 
 The integration and browser commands do not read `.env.local`. Each creates a
 unique `vega-canvas-it-<pid>-<suffix>` project, temporary mode-`0600`
@@ -216,6 +217,8 @@ Only `VITE_` public fields enter the browser build.
 | `ALLOWED_WEB_ORIGINS` | `http://localhost:5173` |
 | `RELEASE_ID` | `local-dev` |
 | `API_DATABASE_URL` | Required PostgreSQL URL for the API runtime role |
+| `COLLABORATION_URL` | Public WebSocket URL returned by collaboration bootstrap |
+| `COLLABORATION_SIGNING_SECRET` | Shared server-only signing secret of at least 32 UTF-8 bytes |
 | `OBJECT_STORAGE_ENDPOINT` | Required S3 endpoint; local HTTP must use loopback |
 | `OBJECT_STORAGE_REGION` | Required S3 region |
 | `OBJECT_STORAGE_BUCKET` | Required private bucket name |
@@ -234,6 +237,7 @@ Only `VITE_` public fields enter the browser build.
 | `RELEASE_ID` | `local-dev` |
 | `SUPPORTED_EXCALIDRAW_VERSION` | `0.18.1` |
 | `COLLABORATION_DATABASE_URL` | Required PostgreSQL URL for the collaboration runtime role |
+| `COLLABORATION_SIGNING_SECRET` | Same server-only signing secret configured for the API |
 
 `MIGRATION_DATABASE_URL` is required only by migration commands. It must target
 the same database as both runtime URLs with a distinct role. Compose derives
@@ -274,22 +278,20 @@ web dependency graph.
 
 ## Current limitations
 
-- No room, guest-session, membership, asset, or export routes exist.
-- PostgreSQL contains schema and privilege foundations only; no domain
-  repository or seeded product data exists.
+- The collaboration slice supports owner/editor room access and one editor
+  share-link role; viewer UI and broader membership management are deferred.
 - Object storage is used only by an authenticated readiness probe; asset
   upload, download, signing, and lifecycle routes do not exist.
-- No canvas is mounted and no Yjs document schema is exposed.
-- Collaboration readiness proves database and persistence capability, but no
-  Yjs document load/save path exists and every upgrade remains denied.
-- Authentication and real room permission decisions remain unimplemented.
-- The browser foundation has no guest-session, room, permission, canvas, Yjs,
-  IndexedDB, asset, or offline workflow to exercise yet.
+- Presence, IndexedDB offline recovery, assets, exports, physics, sticky notes,
+  audio, and expanded undo/redo are not part of this demo slice.
+- The frontend is intentionally minimal and does not yet include product-level
+  visual polish or the full MVP route set.
 - The redacted non-production test API (`window.__CANVAS_TEST_API__`) is
-  implemented for FND-005 and is available only in non-production Vite builds
-  with `VITE_CANVAS_TEST_API_ENABLED=true`.
+  available only in non-production Vite builds with
+  `VITE_CANVAS_TEST_API_ENABLED=true`.
 
-These are safe Stage 0E boundaries, not mocked product behaviour.
+The room demo uses the real API, PostgreSQL, Yjs, Hocuspocus, and Excalidraw
+path; it does not substitute an in-memory collaboration model.
 
 ## Documentation
 
@@ -302,6 +304,8 @@ These are safe Stage 0E boundaries, not mocked product behaviour.
 - [Stage 0C implementation plan](./docs/planning/plans/0004-stage-0c-general-testing-foundation.md)
 - [Stage 0D implementation plan](./docs/planning/plans/0005-stage-0d-non-production-canvas-test-api.md)
 - [Stage 0E implementation plan](./docs/planning/plans/0006-stage-0e-clean-environment-onboarding-and-ci.md)
+- [Core collaboration demo plan](./docs/planning/plans/0007-stage-1-2-core-collaboration-demo-slice.md)
+- [Core collaboration remediation plan](./docs/planning/plans/0008-core-collaboration-review-remediation.md)
 - [Contributing guide](./CONTRIBUTING.md)
 
 ## Troubleshooting
@@ -323,6 +327,14 @@ These are safe Stage 0E boundaries, not mocked product behaviour.
   `MINIO_CONSOLE_PORT` as applicable. Runtime server ports remain separately
   configurable. The web development port is fixed at `5173`; integration,
   smoke, and performance scripts use isolated ports.
+- **Guest creation shows `Failed to fetch`:** open
+  `http://localhost:5173/guest`, not the equivalent `127.0.0.1` URL, and
+  restart `corepack pnpm dev` after configuration changes. The local web,
+  API, and collaboration browser URLs intentionally use the same `localhost`
+  hostname because credentialed requests require an exact allowed origin and
+  same-site session cookies. Confirm the terminal shows both the API on port
+  `4000` and collaboration runtime on port `1234`; a Vite-only process cannot
+  complete guest or room requests.
 - **Migration status fails:** run `corepack pnpm db:migrate`. Unknown,
   reordered, or partially applied migrations require investigation; the
   applications deliberately report schema not-ready.

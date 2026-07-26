@@ -31,16 +31,17 @@ Included:
 
 - Repository-owned PostgreSQL 17 and MinIO local services.
 - Separate migration, API runtime, and collaboration runtime identities.
-- Four ordered SQL migrations and exact migration-name compatibility.
+- Five ordered SQL migrations and exact migration-name compatibility.
 - The eight mandatory relational tables and their database constraints.
 - A private, bucket-scoped S3-compatible runtime credential.
 - Bounded database, schema, persistence, and storage readiness probes.
 - Exact health failure mappings, dependency interruption, and recovery.
 
-Excluded:
+Excluded from this infrastructure contract:
 
-- Domain repositories, seeded data, and product routes.
-- Yjs document load/save behavior or collaboration-room access.
+- Domain-route behavior, which is owned by its API and collaboration
+  implementation contracts.
+- Detailed Yjs document semantics and collaboration-room authorization.
 - Asset upload/download routes, presigning, browser bucket CORS, and exports.
 - Automatic application-startup migrations and destructive downgrades.
 - Production provisioning, backup rehearsal, or a hosting-vendor decision.
@@ -57,7 +58,7 @@ Excluded:
 | `packages/config` | Validate and redact API and collaboration database/storage configuration. |
 | `packages/contracts` | Own strict liveness, ready, and dependency-not-ready shapes. |
 | `apps/api` | Own the API runtime pool, S3 client, database-to-schema-to-storage readiness order, and client shutdown. |
-| `apps/collaboration` | Own its runtime pool, database-to-schema-to-persistence readiness order, and pre-document WebSocket denial. |
+| `apps/collaboration` | Own its runtime pool, database-to-schema-to-persistence readiness order, and fail-closed authenticated document loading. |
 
 PostgreSQL is authoritative for application and authorization records.
 Object storage is authoritative for binary bytes. Health results are public,
@@ -101,6 +102,7 @@ The exact supported migration ledger is:
 2. `002_runtime-grants`
 3. `003_collab-select-grants`
 4. `004_stage-0b-corrections`
+5. `005_api-initial-snapshot-grant`
 
 The schema contains:
 
@@ -117,14 +119,18 @@ Migration `001` creates the mandatory tables, foreign keys, uniqueness,
 checks, and indexes. Migrations `002` and `003` establish initial runtime
 grants. Migration `004` forward-corrects existing local volumes by enforcing a
 non-negative collaboration snapshot sequence and replacing broad grants with
-the final scoped privilege set.
+the final scoped privilege set. Migration `005` gives the API insert-only
+authority for the initial empty collaboration snapshot created in the same
+transaction as a room and its owner membership.
 
 The migration identity owns DDL. The API runtime can mutate API-owned
-application tables but cannot mutate collaboration documents or create schema
-objects. The collaboration runtime can mutate only collaboration documents
-and has column-scoped authority reads that exclude guest email and unrelated
-API-owned data. Both runtime identities may read the migration ledger and
-create temporary tables solely for bounded readiness capability checks.
+application tables and insert the initial collaboration document during
+atomic room creation, but it cannot select, update, or delete collaboration
+documents or create schema objects. The collaboration runtime owns subsequent
+collaboration-document reads and mutations and has column-scoped authority
+reads that exclude guest email and unrelated API-owned data. Both runtime
+identities may read the migration ledger and create temporary tables solely
+for bounded readiness capability checks.
 
 Migration status succeeds only when the applied names and order exactly match
 the supported list. Missing, reordered, or unknown migrations are not
@@ -192,8 +198,7 @@ terminate either service.
   configuration.
 - The bucket is private and the runtime policy is restricted to the configured
   bucket.
-- Every collaboration WebSocket upgrade receives
-  `403 COLLAB_PERMISSION_DENIED` before a Yjs document is created, and the
+- Invalid collaboration upgrades fail before a Yjs document is exposed, and
   rejection does not terminate the collaboration process.
 - No browser bundle may contain server configuration field names or usable
   server-only values.

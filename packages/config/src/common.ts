@@ -395,6 +395,7 @@ export const readRequiredSecret = (
   raw: RawEnvironment,
   field: string,
   _profile: ApplicationProfile,
+  minimumLength = 1,
 ): string => {
   const value = raw[field];
   if (value === undefined || value.trim() === "") {
@@ -403,7 +404,11 @@ export const readRequiredSecret = (
   if (isPlaceholderValue(value)) {
     return fail(field, "PLACEHOLDER_DETECTED");
   }
-  return value.trim();
+  const trimmed = value.trim();
+  if (new TextEncoder().encode(trimmed).byteLength < minimumLength) {
+    return fail(field, "INVALID_FORMAT");
+  }
+  return trimmed;
 };
 
 export const readBoolean = (

@@ -14,7 +14,8 @@ export const SUPPORTED_MIGRATIONS: readonly string[] = Object.freeze([
   "002_runtime-grants",
   "003_collab-select-grants",
   "004_stage-0b-corrections",
+  "005_api-initial-snapshot-grant",
 ]);
 
 /** Numeric schema version that must match the latest supported migration count. */
-export const SUPPORTED_SCHEMA_VERSION = 4;
+export const SUPPORTED_SCHEMA_VERSION = 5;

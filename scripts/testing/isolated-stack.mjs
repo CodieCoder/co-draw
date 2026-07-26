@@ -359,6 +359,7 @@ class IsolatedTestStack {
       VEGA_TEST_WEB_BASE_URL: this.webUrl,
     });
     this.applicationProcesses = new Set();
+    this.applicationProcessesByName = new Map();
     this.commandProcesses = new Set();
     this.composeStarted = false;
     this.cleanupPromise = undefined;
@@ -537,6 +538,15 @@ class IsolatedTestStack {
   }
 
   startApplication(application) {
+    const existing = this.applicationProcessesByName.get(application);
+    if (
+      existing &&
+      existing.exitCode === null &&
+      existing.signalCode === null
+    ) {
+      throw new Error(`Isolated ${application} process is already running.`);
+    }
+
     let executable;
     let arguments_;
 
@@ -573,8 +583,12 @@ class IsolatedTestStack {
       stdio: ["ignore", "inherit", "inherit"],
     });
     this.applicationProcesses.add(child);
+    this.applicationProcessesByName.set(application, child);
     child.once("exit", () => {
       this.applicationProcesses.delete(child);
+      if (this.applicationProcessesByName.get(application) === child) {
+        this.applicationProcessesByName.delete(application);
+      }
     });
     child.once("error", (error) => {
       process.stderr.write(
@@ -582,6 +596,26 @@ class IsolatedTestStack {
       );
     });
     return child;
+  }
+
+  async stopApplication(application) {
+    const child = this.applicationProcessesByName.get(application);
+    if (!child) {
+      return;
+    }
+    await terminateChild(child);
+    this.applicationProcesses.delete(child);
+    this.applicationProcessesByName.delete(application);
+  }
+
+  async restartCollaborationApplication() {
+    await this.stopApplication("collaboration");
+    this.startApplication("collaboration");
+    await this.exactHealth(
+      `${this.collaborationUrl}/health/ready`,
+      200,
+      this.readyBody("collaboration"),
+    );
   }
 
   async startApplications({ web = false } = {}) {
@@ -717,6 +751,7 @@ class IsolatedTestStack {
     const children = [...this.applicationProcesses];
     await Promise.all(children.map(terminateChild));
     this.applicationProcesses.clear();
+    this.applicationProcessesByName.clear();
   }
 
   async cleanup() {
@@ -737,6 +772,7 @@ class IsolatedTestStack {
     await Promise.all(runningChildren.map(terminateChild));
     this.commandProcesses.clear();
     this.applicationProcesses.clear();
+    this.applicationProcessesByName.clear();
 
     if (this.composeStarted) {
       try {
@@ -839,6 +875,9 @@ export const createIsolatedTestStack = async ({
         `@127.0.0.1:${postgres}/${database}`,
       COLLABORATION_HOST: "127.0.0.1",
       COLLABORATION_PORT: String(collaboration),
+      COLLABORATION_URL: `ws://127.0.0.1:${collaboration}`,
+      COLLABORATION_SIGNING_SECRET:
+        `collaboration-signing-${suffix}-Secret1`,
       MIGRATION_DATABASE_URL:
         `postgresql://${migrationRole}:${migrationPassword}` +
         `@127.0.0.1:${postgres}/${database}`,

@@ -4,18 +4,28 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5173",
+    "dev": "vite --host localhost --port 5173",
     "build": "tsc -b && vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 5173",
+    "preview": "vite preview --host localhost --port 5173",
     "lint": "eslint src vite.config.ts --max-warnings=0",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "catalog:",
+    "@hocuspocus/provider": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@vega/auth": "workspace:*",
+    "@vega/collaboration-schema": "workspace:*",
     "@vega/config": "workspace:*",
+    "@vega/contracts": "workspace:*",
+    "@vega/excalidraw-adapter": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-router": "catalog:",
+    "react-router-dom": "catalog:",
+    "yjs": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",

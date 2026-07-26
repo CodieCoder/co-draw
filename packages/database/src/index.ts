@@ -17,6 +17,7 @@
  * - Object-storage access.
  */
 export { createPool, endPool, withClient } from "./connection.js";
+export type { Pool } from "pg";
 export {
   probeDatabaseReadiness,
   probePersistenceReadiness,

@@ -17,7 +17,7 @@ const requiredEnvironment = (field: string): string => {
   return value;
 };
 
-test("Alice, Bob, and Charlie load the isolated foundation shell", async ({
+test("Alice, Bob, and Charlie load the isolated guest entry route", async ({
   browser,
 }) => {
   const baseUrl = requiredEnvironment("VEGA_TEST_WEB_BASE_URL");
@@ -50,7 +50,7 @@ test("Alice, Bob, and Charlie load the isolated foundation shell", async ({
 
     await Promise.all(
       SYNTHETIC_ACTOR_KEYS.map(async (key) => {
-        await collaborators[key].page.goto("/");
+        await collaborators[key].page.goto("/guest");
       }),
     );
 
@@ -63,18 +63,11 @@ test("Alice, Bob, and Charlie load the isolated foundation shell", async ({
       await expect(
         page.getByRole("heading", {
           level: 1,
-          name: "The foundation is online.",
+          name: "Create a private guest identity",
         }),
       ).toBeVisible();
-      await expect(
-        page.getByRole("heading", {
-          level: 2,
-          name: "Public configuration is valid",
-        }),
-      ).toBeVisible();
-      await expect(
-        page.getByText("No room or scene is created from this page."),
-      ).toBeVisible();
+      await expect(page.getByLabel("Username")).toBeVisible();
+      await expect(page.getByLabel("Email")).toBeVisible();
 
       const localValue = await page.evaluate(() =>
         localStorage.getItem("__vega_test_isolation__"),
@@ -90,7 +83,6 @@ test("Alice, Bob, and Charlie load the isolated foundation shell", async ({
 
     expect(diagnostics).toEqual([]);
   } finally {
-    await collaborators.close();
     await collaborators.close();
   }
 });

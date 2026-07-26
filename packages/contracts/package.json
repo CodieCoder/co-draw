@@ -4,9 +4,17 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./collaboration-token": {
+      "types": "./dist/collaboration-token.d.ts",
+      "default": "./dist/collaboration-token.js"
+    },
     "./errors": {
       "types": "./dist/errors.d.ts",
       "default": "./dist/errors.js"
+    },
+    "./guest": {
+      "types": "./dist/guest.d.ts",
+      "default": "./dist/guest.js"
     },
     "./health": {
       "types": "./dist/health.d.ts",
@@ -19,6 +27,14 @@
     "./roles": {
       "types": "./dist/roles.d.ts",
       "default": "./dist/roles.js"
+    },
+    "./room": {
+      "types": "./dist/room.d.ts",
+      "default": "./dist/room.js"
+    },
+    "./share-links": {
+      "types": "./dist/share-links.d.ts",
+      "default": "./dist/share-links.js"
     }
   },
   "scripts": {

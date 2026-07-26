@@ -50,6 +50,8 @@ The cross-stage dependency sequence remains authoritative in the parent [MVP Imp
 | 0004 | [Stage 0C — General Testing Foundation](./0004-stage-0c-general-testing-foundation.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-004` | Proposed | Passed |
 | 0005 | [Stage 0D — Non-Production Canvas Inspection Boundary](./0005-stage-0d-non-production-canvas-test-api.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-005` | Proposed | Passed |
 | 0006 | [Stage 0E — Clean-Environment Onboarding and Continuous Validation](./0006-stage-0e-clean-environment-onboarding-and-ci.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-006` | Proposed | Passed |
+| 0007 | [Stage 1/2 — Core Collaboration Demo Slice](./0007-stage-1-2-core-collaboration-demo-slice.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `CAN-001`–`CAN-004`, `COL-001`–`COL-005`, `COL-006` subset | Proposed | Passed |
+| 0008 | [Core Collaboration Review Remediation](./0008-core-collaboration-review-remediation.md) | [Stage 1/2 Core Collaboration Demo Slice](./0007-stage-1-2-core-collaboration-demo-slice.md) | `CAN-001`–`CAN-004`, `COL-001`–`COL-005`, `COL-006` subset | Proposed | Passed |
 
 ---
 

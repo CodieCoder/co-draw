@@ -37,14 +37,13 @@ Included:
 - Dynamically imported hook module that installs `window.__CANVAS_TEST_API__`.
 - Frozen, non-writable, non-configurable global with `inspect()` method.
 - `CanvasInspectionSnapshot` with schema `v1`, runtime profile/releaseId,
-  `not-mounted` canvas, `null` room, `null` scene, `not-configured`
-  collaboration/persistence.
+  redacted canvas/room/scene/connection state, and no identity or credential.
 - Static production-bundle scans verifying the API identifier is absent.
 - Two-phase browser test (production-absent, test-mode-present).
 
 Excluded:
 
-- Room, session, canvas, Yjs, or permission implementation.
+- Mutation, authentication, or permission decisions through the inspection API.
 - Mutation, command, or identity-bearing fields on the API or snapshot.
 - The `FND-006` CI workflow or provider-specific CI.
 - Firefox, WebKit, or QA-Intel scenarios.
@@ -99,10 +98,41 @@ interface CanvasInspectionSnapshot {
     readonly profile: ApplicationProfile;
     readonly releaseId: string;
   };
-  readonly canvas: { readonly status: "not-mounted" };
-  readonly room: null;
-  readonly scene: null;
-  readonly collaboration: { readonly status: "not-configured" };
+  readonly canvas: {
+    readonly status: "not-mounted" | "mounted";
+    readonly adapter?: {
+      readonly excalidrawVersion: string;
+      readonly elementCount: number;
+    };
+  };
+  readonly room: {
+    readonly id: string;
+    readonly status: string;
+    readonly role: string;
+  } | null;
+  readonly scene: {
+    readonly elementCount: number;
+    readonly elementTypes: string[];
+    readonly order: string[];
+    readonly elements: readonly {
+      readonly id: string;
+      readonly type: string;
+      readonly x: number;
+      readonly y: number;
+      readonly width: number;
+      readonly height: number;
+      readonly isDeleted: boolean;
+    }[];
+  } | null;
+  readonly collaboration: {
+    readonly status:
+      | "disconnected"
+      | "connecting"
+      | "connected"
+      | "reconnecting"
+      | "failed";
+    readonly documentName?: string;
+  };
   readonly persistence: { readonly status: "not-configured" };
 }
 ```
@@ -114,8 +144,8 @@ Properties:
 - Each `inspect()` call returns a fresh frozen plain object.
 - The snapshot has no identity, token, URL, Yjs instance, binary,
   recovery-content, or command field.
-- Later stages may add redacted fields while sourcing scene data only from the
-  Excalidraw adapter.
+- Scene fields are a redacted projection sourced only from the Excalidraw
+  adapter; they are not a second scene model.
 
 ---
 
@@ -145,10 +175,15 @@ Properties:
 2. **Test mode present**: rebuilds the web application in Vite `test` mode with
    `VITE_CANVAS_TEST_API_ENABLED=true`, restarts the web preview, runs the
    same Playwright spec that asserts the global is present with the exact
-   foundation snapshot.
+   initial guest-route snapshot.
 
 Static bundle verification runs after both phases, rebuilding in production
 mode and scanning all emitted JS, HTML, and source maps.
+
+`corepack pnpm test:browser:collaboration` uses the enabled read-only
+inspection boundary to compare redacted scene projections across two contexts
+and after collaboration restart/reload. It never exposes or mutates a Y.Doc,
+Excalidraw API, token, URL, or private identity.
 
 ---
 

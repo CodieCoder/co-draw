@@ -1,5 +1,4 @@
 import type { ServerResponse } from "node:http";
-import type { Socket } from "node:net";
 
 import { Server } from "@hocuspocus/server";
 import {
@@ -17,8 +16,11 @@ import {
   probeDatabaseReadiness,
   probePersistenceReadiness,
 } from "@vega/database";
+import { SCHEMA_VERSION } from "@vega/collaboration-schema";
 
 import { mapDatabaseReadiness } from "./health.js";
+import { authenticateConnection, parseDocumentName } from "./auth.js";
+import { loadSnapshot, persistSnapshot } from "./persistence.js";
 
 const writeJson = (
   response: ServerResponse,
@@ -34,14 +36,14 @@ const writeJson = (
   response.end(payload);
 };
 
+const stopHandledHook = (): Promise<never> => {
+  // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+  return Promise.reject();
+};
+
 const bootstrap = async (): Promise<void> => {
   const configuration = parseCollaborationConfiguration(process.env);
   const pool = createPool(configuration.databaseUrl);
-
-  const stopHandledHook = (): Promise<never> => {
-    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-    return Promise.reject();
-  };
 
   const server = new Server({
     name: "vega-collaboration",
@@ -52,26 +54,63 @@ const bootstrap = async (): Promise<void> => {
     maxUnauthenticatedQueueSize: 64 * 1_024,
     maxUnauthenticatedQueueMessages: 16,
     maxPendingDocuments: 1,
+    debounce: 750,
+    maxDebounce: 3_000,
 
-    onAuthenticate() {
-      // Authority and persistence arrive in later stages.
-      // Every document request must stop before Hocuspocus creates a Yjs document.
-      return stopHandledHook();
+    async onAuthenticate({ documentName, token, connectionConfig }) {
+      const roomId = parseDocumentName(documentName);
+      if (!roomId) {
+        throw new Error("COLLAB_PERMISSION_DENIED");
+      }
+
+      if (!token) {
+        throw new Error("COLLAB_SESSION_INVALID");
+      }
+
+      const authResult = await authenticateConnection(
+        pool,
+        configuration.collaborationSigningSecret,
+        documentName,
+        token,
+      );
+
+      if (!authResult.ok) {
+        throw new Error(authResult.code);
+      }
+
+      connectionConfig.readOnly = authResult.claims.mode === "read-only";
+      return { claims: authResult.claims };
     },
 
-    onUpgrade({ socket }) {
-      const upgradeSocket = socket as Socket;
-      upgradeSocket.end(
-        [
-          "HTTP/1.1 403 Forbidden",
-          "Connection: close",
-          "Content-Type: text/plain; charset=utf-8",
-          "Content-Length: 24",
-          "",
-          "COLLAB_PERMISSION_DENIED",
-        ].join("\r\n"),
-      );
-      return stopHandledHook();
+    async onLoadDocument({ documentName }) {
+      const roomId = parseDocumentName(documentName);
+      if (!roomId) {
+        throw new Error("COLLAB_PERMISSION_DENIED");
+      }
+
+      try {
+        const snapshot = await loadSnapshot(pool, roomId);
+        if (!snapshot) {
+          throw new Error("Missing collaboration document");
+        }
+        return snapshot;
+      } catch {
+        throw new Error("COLLAB_DOCUMENT_LOAD_FAILED");
+      }
+    },
+
+    async onStoreDocument({ documentName, document }) {
+      const roomId = parseDocumentName(documentName);
+      if (!roomId) {
+        throw new Error("COLLAB_PERMISSION_DENIED");
+      }
+
+      await persistSnapshot(pool, {
+        roomId,
+        ydoc: document,
+        schemaVersion: SCHEMA_VERSION,
+        excalidrawVersion: configuration.supportedExcalidrawVersion,
+      });
     },
 
     async onRequest({ request, response }) {
@@ -87,7 +126,6 @@ const bootstrap = async (): Promise<void> => {
       if (request.method === "GET" && request.url === "/health/ready") {
         const releaseId = configuration.releaseId;
 
-        // Deterministic readiness: DB → schema → persistence.
         const dbResult = await probeDatabaseReadiness(pool);
         if (!dbResult.ready) {
           const { status, body } = mapDatabaseReadiness(releaseId, dbResult);

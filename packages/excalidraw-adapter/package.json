@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./excalidraw": {
+      "types": "./dist/excalidraw.d.ts",
+      "default": "./dist/excalidraw.js"
     }
   },
   "scripts": {
@@ -17,7 +21,10 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@excalidraw/excalidraw": "catalog:"
+    "@excalidraw/excalidraw": "catalog:",
+    "@vega/collaboration-schema": "workspace:*",
+    "@vega/contracts": "workspace:*",
+    "yjs": "catalog:"
   },
   "peerDependencies": {
     "react": "19.2.8",

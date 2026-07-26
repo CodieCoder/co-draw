@@ -3,7 +3,12 @@ import type { ApiConfiguration } from "@vega/config/api";
 import { createPool } from "@vega/database";
 import { createStorageClient } from "./storage-readiness.js";
 import { HealthController } from "./health.controller.js";
+import { GuestController } from "./guest/guest.controller.js";
+import { RoomController } from "./room/room.controller.js";
+import { ShareLinksController } from "./share-links/share-links.controller.js";
+import { CollaborationController } from "./collaboration/collaboration.controller.js";
 import { DependencyLifecycle } from "./dependency-lifecycle.js";
+import { SessionGuard, OptionalSessionGuard } from "./session/session.guard.js";
 import { API_CONFIGURATION, DB_POOL, STORAGE_CLIENT } from "./runtime-config.js";
 
 @Module({})
@@ -20,11 +25,13 @@ export class AppModule {
 
     return {
       module: AppModule,
-      controllers: [HealthController],
+      controllers: [HealthController, GuestController, RoomController, ShareLinksController, CollaborationController],
       providers: [
         { provide: API_CONFIGURATION, useValue: configuration },
         { provide: DB_POOL, useValue: pool },
         { provide: STORAGE_CLIENT, useValue: storageClient },
+        SessionGuard,
+        OptionalSessionGuard,
         DependencyLifecycle,
       ],
     };

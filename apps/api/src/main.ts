@@ -11,6 +11,7 @@ import {
 } from "@vega/config/api";
 
 import { AppModule } from "./app.module.js";
+import { registerApiRequestPolicy } from "./http-policy.js";
 
 const bootstrap = async (): Promise<void> => {
   const configuration = parseApiConfiguration(process.env);
@@ -29,6 +30,10 @@ const bootstrap = async (): Promise<void> => {
     origin: [...configuration.allowedWebOrigins],
     credentials: true,
   });
+  registerApiRequestPolicy(
+    application.getHttpAdapter().getInstance(),
+    configuration,
+  );
   application.enableShutdownHooks();
 
   await application.listen(configuration.port, configuration.host);

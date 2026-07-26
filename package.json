@@ -19,6 +19,7 @@
     "test:integration": "node scripts/test-integration.mjs",
     "test:integration:foundation": "node scripts/test-integration-foundation.mjs",
     "test:browser": "node scripts/test-browser.mjs",
+    "test:browser:collaboration": "node scripts/test-browser-collaboration.mjs",
     "test:cleanup": "node scripts/test-cleanup.mjs",
     "build": "turbo run build",
     "typecheck": "turbo run build && turbo run typecheck && tsc --project tsconfig.json --pretty false",

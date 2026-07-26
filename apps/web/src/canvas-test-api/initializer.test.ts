@@ -47,7 +47,7 @@ describe("CanvasTestApi installation", () => {
       canvas: { status: "not-mounted" },
       room: null,
       scene: null,
-      collaboration: { status: "not-configured" },
+      collaboration: { status: "disconnected" },
       persistence: { status: "not-configured" },
     });
   });
@@ -83,7 +83,7 @@ describe("CanvasTestApi installation", () => {
       canvas: { status: "not-mounted" },
       room: null,
       scene: null,
-      collaboration: { status: "not-configured" },
+      collaboration: { status: "disconnected" },
       persistence: { status: "not-configured" },
     });
   });
