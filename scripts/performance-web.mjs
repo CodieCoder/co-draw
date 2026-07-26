@@ -1,7 +1,9 @@
 import { spawn } from "node:child_process";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const host = "127.0.0.1";
@@ -9,11 +11,99 @@ const port = 5_274;
 const url = `http://${host}:${port}`;
 const vite = join(root, "apps/web/node_modules/.bin/vite");
 const lighthouse = join(root, "node_modules/.bin/lighthouse");
-const chromePath =
-  process.env.CHROME_PATH ??
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const reportDirectory = join(root, "reports/lighthouse");
 const reportPath = join(reportDirectory, "web-foundation.report.json");
+
+const findChrome = () => {
+  if (process.env.CHROME_PATH) {
+    return process.env.CHROME_PATH;
+  }
+
+  const platformCandidates = [];
+
+  if (process.platform === "darwin") {
+    platformCandidates.push(
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    );
+  } else if (process.platform === "linux") {
+    platformCandidates.push(
+      "/usr/bin/google-chrome",
+      "/usr/bin/google-chrome-stable",
+      "/usr/bin/chromium-browser",
+      "/usr/bin/chromium",
+      "/snap/bin/chromium",
+    );
+  }
+
+  const msPlaywrightDir = join(
+    homedir(),
+    ".cache",
+    "ms-playwright",
+  );
+  if (existsSync(msPlaywrightDir)) {
+    try {
+      for (const entry of readdirSync(msPlaywrightDir)) {
+        if (!entry.startsWith("chromium-")) continue;
+        const installDir = join(msPlaywrightDir, entry);
+        for (const platformDir of readdirSync(installDir)) {
+          if (platformDir.startsWith(".")) continue;
+          const candidates = [];
+          if (process.platform === "darwin") {
+            for (const appName of [
+              "Google Chrome for Testing.app",
+              "Chromium.app",
+            ]) {
+              candidates.push(
+                join(
+                  installDir,
+                  platformDir,
+                  appName,
+                  "Contents",
+                  "MacOS",
+                  appName.replace(".app", ""),
+                ),
+              );
+            }
+          } else if (process.platform === "linux") {
+            candidates.push(
+              join(installDir, platformDir, "chrome-linux64", "chrome"),
+              join(installDir, platformDir, "chrome-linux", "chrome"),
+              join(installDir, platformDir, "chrome"),
+            );
+          }
+          for (const candidate of candidates) {
+            if (existsSync(candidate)) {
+              platformCandidates.push(candidate);
+              break;
+            }
+          }
+        }
+      }
+    } catch {
+      // Playwright directory enumeration failed; fall through to candidates.
+    }
+  }
+
+  for (const candidate of platformCandidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  throw new Error(
+    [
+      "No supported Chrome or Chromium executable found.",
+      "",
+      "Install Chrome or Chromium, set CHROME_PATH to the executable path,",
+      "or install the pinned Playwright Chromium:",
+      "  corepack pnpm exec playwright install chromium",
+      "",
+      "On Linux CI, install system dependencies as well:",
+      "  corepack pnpm exec playwright install --with-deps chromium",
+    ].join("\n"),
+  );
+};
+
+const chromePath = findChrome();
 
 const preview = spawn(
   vite,

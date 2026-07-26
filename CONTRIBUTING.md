@@ -48,20 +48,50 @@ explicitly; application startup must not apply or downgrade schema changes.
 preserves named volumes. Do not delete volumes unless the exact target contains
 only disposable data and data loss is separately authorised.
 
-Run the focused gates for any area you change. Before handoff, also run:
+The following commands require `.env.local` (they operate against your
+persistent local infrastructure):
+`dev`, `infra:up`, `infra:down`, `infra:status`, `db:migrate`,
+`db:migrate:status`, `infra:check`, `smoke:apps`, `verify:local`.
+
+The following commands do not use `.env.local` (they use isolated Docker
+infrastructure or are environment-independent):
+`check`, `test:unit`, `test:coverage`, `test:integration`,
+`test:integration:foundation`, `test:browser`, `verify:production`,
+`verify:foundation`, `verify:clean`, `build`, `typecheck`, `lint`,
+`bundle:report`, `performance:web`, `docs:check`.
+
+Run the focused gates for any area you change. Before handoff, run the
+canonical `.env.local`-independent complete verification:
 
 ```sh
-corepack pnpm db:migrate:status
-corepack pnpm infra:check
+corepack pnpm verify:foundation
+```
+
+For changes that affect the local developer path, also run:
+
+```sh
+corepack pnpm verify:local
+```
+
+The canonical command is equivalent to running every mandatory gate in order.
+Individual gates remain available for focused inner-loop work:
+
+```sh
+corepack pnpm check
+corepack pnpm test:coverage
 corepack pnpm test:integration:foundation
 corepack pnpm test:integration
 corepack pnpm test:browser
-corepack pnpm smoke:apps
-corepack pnpm test:coverage
+corepack pnpm verify:production
 corepack pnpm bundle:report
 corepack pnpm performance:web
 corepack pnpm docs:check
-git diff --check
+```
+
+Prove clean-source reproducibility before marking work complete:
+
+```sh
+corepack pnpm verify:clean
 ```
 
 Do not describe a gate as passing when it was skipped, stale, or run under

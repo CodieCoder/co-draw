@@ -1,11 +1,13 @@
 # Vega Canvas
 
 Vega Canvas is a real-time collaborative infinite-canvas application built
-around Excalidraw. This repository currently implements the Stage 0A through
-Stage 0C foundations: a reproducible monorepo, executable shared contracts,
-three application shells, PostgreSQL and private S3-compatible local
-infrastructure, an ordered relational migration set, truthful readiness, and
-isolated Vitest, service-integration, and Chromium Playwright foundations.
+around Excalidraw. This repository currently implements the complete Stage 0A
+through Stage 0E execution foundations: a reproducible monorepo, executable
+shared contracts, three application shells, PostgreSQL and private
+S3-compatible local infrastructure, an ordered relational migration set,
+truthful readiness, isolated Vitest, service-integration, and Chromium
+Playwright foundations, a non-production canvas inspection API boundary, and
+clean-environment onboarding with continuous validation.
 
 The scaffold deliberately does **not** create rooms, sessions, or canvas
 state. API and collaboration liveness always return `200`. Readiness returns
@@ -123,7 +125,11 @@ non-private `COLLAB_PERMISSION_DENIED`. No Yjs room document is created.
 | `corepack pnpm smoke:apps` | Launch built shells on isolated ports against local dependencies and verify protocols |
 | `corepack pnpm bundle:report` | Record web raw, gzip, and Brotli measurements |
 | `corepack pnpm performance:web` | Enforce Lighthouse performance, accessibility, and LCP gates |
-| `corepack pnpm docs:check` | Validate relative Markdown links and documentation indexes |
+| `corepack pnpm docs:check` | Validate relative Markdown links, documentation indexes, command consistency, version pins, and plan catalog |
+| `corepack pnpm verify:local` | Verify migration status, infrastructure readiness, and application suite smoke against configured local dependencies |
+| `corepack pnpm verify:production` | Build web for production and scan the bundle for test API leakage |
+| `corepack pnpm verify:foundation` | Run every mandatory `.env.local`-independent Stage 0 gate in order |
+| `corepack pnpm verify:clean` | Copy only Git-tracked source to a private temporary directory, frozen-install, and run `verify:foundation` |
 
 Generated caches and reports are ignored by Git. Bundle measurements are
 written to `reports/bundle/`; Lighthouse JSON is written to
@@ -131,9 +137,24 @@ written to `reports/bundle/`; Lighthouse JSON is written to
 `reports/playwright/<run-id>/`. The foundation records bundle size without
 introducing a failing size budget.
 
-`check` is intentionally the fast build, lint, typecheck, and unit gate. Full
-foundation verification additionally runs both integration commands and
-`test:browser`.
+`check` is intentionally the fast build, lint, typecheck, and unit gate. It is
+not the complete foundation gate.
+
+## Verification commands
+
+Four canonical verification commands provide distinct, non-overlapping
+coverage:
+
+| Command | Scope | Requires `.env.local` | Requires Docker |
+| --- | --- | --- | --- |
+| `corepack pnpm verify:local` | Migration status, infrastructure readiness, and application-shell smoke against your configured local stack | Yes | Yes (persistent) |
+| `corepack pnpm verify:production` | Production web build and static test-API-absence scan | No | No |
+| `corepack pnpm verify:foundation` | Every mandatory Stage 0 gate: static checks, unit & coverage, both isolated integration suites, Chromium two-phase browser smoke, production bundle scan, bundle & Lighthouse reporting, and documentation validation | No | Yes (isolated) |
+| `corepack pnpm verify:clean` | Git-tracked source snapshot, frozen install, and `verify:foundation` in a process-owned temporary directory | No | Yes (isolated) |
+
+`verify:foundation` is the single complete `.env.local`-independent Stage 0
+command. `verify:clean` proves that a source tree without `node_modules` or
+`.env.local` can install and pass every mandatory gate.
 
 ## Testing foundation
 
@@ -268,7 +289,7 @@ web dependency graph.
   implemented for FND-005 and is available only in non-production Vite builds
   with `VITE_CANVAS_TEST_API_ENABLED=true`.
 
-These are safe Stage 0C boundaries, not mocked product behaviour.
+These are safe Stage 0E boundaries, not mocked product behaviour.
 
 ## Documentation
 
@@ -280,6 +301,7 @@ These are safe Stage 0C boundaries, not mocked product behaviour.
 - [Stage 0B implementation plan](./docs/planning/plans/0002-stage-0b-local-persistence-infrastructure-and-readiness.md)
 - [Stage 0C implementation plan](./docs/planning/plans/0004-stage-0c-general-testing-foundation.md)
 - [Stage 0D implementation plan](./docs/planning/plans/0005-stage-0d-non-production-canvas-test-api.md)
+- [Stage 0E implementation plan](./docs/planning/plans/0006-stage-0e-clean-environment-onboarding-and-ci.md)
 - [Contributing guide](./CONTRIBUTING.md)
 
 ## Troubleshooting
@@ -325,3 +347,18 @@ These are safe Stage 0C boundaries, not mocked product behaviour.
   `vega-canvas-it-<pid>-<suffix>` name, confirm the owning process is gone,
   then run `corepack pnpm test:cleanup -- <exact-project>`. Never use a
   wildcard, Docker prune, or the developer project name.
+- **`verify:clean` fails or leaves resources:** the clean-source runner uses
+  a private temporary directory under your system temporary path
+  (`vega-clean-verify-<pid>`). On success, ordinary failure, `SIGINT`, and
+  `SIGTERM` the runner removes only its own directory. If a `SIGKILL` or host
+  termination leaves the directory, remove it manually by its exact full path.
+  The runner never touches your original source tree, `node_modules`,
+  `.env.local`, or persistent Docker infrastructure.
+- **`verify:foundation` fails part way through:** identify the first failing
+  stage and re-run that stage individually. The verification commands must pass
+  together; do not skip, quarantine, retry-away, or mark a mandatory gate as
+  optional.
+- **Lighthouse cannot find Chrome:** the script searches in order: explicit
+  `CHROME_PATH`, platform Chrome/Chromium installations, and the installed
+  Playwright Chromium. If no executable is found, install a supported browser
+  or set `CHROME_PATH` explicitly.

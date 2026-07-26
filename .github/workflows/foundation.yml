@@ -1,0 +1,75 @@
+name: Stage 0 Foundation Verification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Verify Foundation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify pinned Node version
+        run: |
+          expected="$(cat .nvmrc)"
+          actual="$(node --version | sed 's/^v//')"
+          if [ "$actual" != "$expected" ]; then
+            echo "Expected Node $expected but got $actual" >&2
+            exit 1
+          fi
+          echo "Node $actual matches .nvmrc"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Verify Corepack pnpm version
+        run: |
+          expected="$(node -e "console.log(require('./package.json').engines.pnpm)")"
+          actual="$(corepack pnpm --version)"
+          if [ "$actual" != "$expected" ]; then
+            echo "Expected pnpm $expected but got $actual" >&2
+            exit 1
+          fi
+          echo "pnpm $actual matches engines.pnpm"
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: corepack pnpm exec playwright install --with-deps chromium
+
+      - name: Run foundation verification
+        run: corepack pnpm verify:foundation
+
+      - name: Collect diagnostic reports
+        if: failure()
+        run: |
+          mkdir -p /tmp/foundation-diagnostics
+          for dir in reports/bundle reports/lighthouse reports/playwright; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir" /tmp/foundation-diagnostics/ || true
+            fi
+          done
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: foundation-diagnostics
+          path: /tmp/foundation-diagnostics/
+          retention-days: 3
+          if-no-files-found: ignore

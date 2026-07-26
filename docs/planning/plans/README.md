@@ -49,6 +49,7 @@ The cross-stage dependency sequence remains authoritative in the parent [MVP Imp
 | 0003 | [Stage 0B Review Remediation](./0003-stage-0b-review-remediation.md) | [Stage 0B](./0002-stage-0b-local-persistence-infrastructure-and-readiness.md) | `FND-003` | Proposed | Passed |
 | 0004 | [Stage 0C — General Testing Foundation](./0004-stage-0c-general-testing-foundation.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-004` | Proposed | Passed |
 | 0005 | [Stage 0D — Non-Production Canvas Inspection Boundary](./0005-stage-0d-non-production-canvas-test-api.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-005` | Proposed | Passed |
+| 0006 | [Stage 0E — Clean-Environment Onboarding and Continuous Validation](./0006-stage-0e-clean-environment-onboarding-and-ci.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-006` | Proposed | Passed |
 
 ---
 
