@@ -80,7 +80,7 @@ export class ExcalidrawAdapter {
       for (const el of normalized) {
         const existing = this.#elementsMap.get(el.id);
         if (!this.#elementRecordsEqual(existing, el)) {
-          this.#elementsMap.set(el.id, el as unknown as ElementRecord);
+          this.#elementsMap.set(el.id, el);
         }
       }
 

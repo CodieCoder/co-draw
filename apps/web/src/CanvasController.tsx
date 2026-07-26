@@ -1,6 +1,10 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import * as Y from "yjs";
-import { Excalidraw } from "@vega/excalidraw-adapter/excalidraw";
+import {
+  Excalidraw,
+  MainMenu,
+  serializeAsJSON,
+} from "@vega/excalidraw-adapter/excalidraw";
 import type { ExcalidrawImperativeAPI } from "@vega/excalidraw-adapter/excalidraw";
 import { ExcalidrawAdapter } from "@vega/excalidraw-adapter";
 import type { ElementRecord } from "@vega/excalidraw-adapter";
@@ -131,6 +135,27 @@ export function CanvasController({ ydoc: externalYdoc }: CanvasControllerProps) 
     [],
   );
 
+  const exportSceneJson = useCallback(() => {
+    const api = excalidrawAPIRef.current;
+    if (!api) return;
+
+    const sceneJson = serializeAsJSON(
+      api.getSceneElementsIncludingDeleted(),
+      api.getAppState(),
+      api.getFiles(),
+      "local",
+    );
+    const objectUrl = URL.createObjectURL(
+      new Blob([sceneJson], { type: "application/json" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = `vega-canvas-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  }, []);
 
   if (!readyRef.current) {
     return <div>Initializing canvas...</div>;
@@ -152,7 +177,14 @@ export function CanvasController({ ydoc: externalYdoc }: CanvasControllerProps) 
             saveAsImage: false,
           },
         }}
-      />
+      >
+        <MainMenu>
+          <MainMenu.Item onSelect={exportSceneJson}>
+            Export scene JSON
+          </MainMenu.Item>
+          <MainMenu.DefaultItems.Help />
+        </MainMenu>
+      </Excalidraw>
     </div>
   );
 }

@@ -86,6 +86,85 @@ describe("collaboration schema", () => {
       }
     });
 
+    it("preserves required freehand scene fields", () => {
+      const normalized = normalizeElement({
+        id: "draw-001",
+        type: "freedraw",
+        x: 10,
+        y: 20,
+        width: 80,
+        height: 40,
+        angle: 0,
+        version: 2,
+        versionNonce: 22,
+        points: [[0, 0], [40, 20], [80, 10]],
+        pressures: [0.5, 0.7, 0.4],
+        simulatePressure: false,
+        lastCommittedPoint: null,
+      });
+
+      expect(normalized).not.toBeNull();
+      expect(normalized?.points).toEqual([[0, 0], [40, 20], [80, 10]]);
+      expect(normalized?.pressures).toEqual([0.5, 0.7, 0.4]);
+      expect(normalized?.simulatePressure).toBe(false);
+    });
+
+    it("preserves required collaborative text fields", () => {
+      const normalized = normalizeElement({
+        id: "text-001",
+        type: "text",
+        x: 10,
+        y: 20,
+        width: 120,
+        height: 24,
+        angle: 0,
+        version: 3,
+        versionNonce: 33,
+        fontSize: 20,
+        fontFamily: 5,
+        text: "Shared text",
+        textAlign: "left",
+        verticalAlign: "top",
+        containerId: null,
+        originalText: "Shared text",
+        autoResize: true,
+        lineHeight: 1.25,
+      });
+
+      expect(normalized).not.toBeNull();
+      expect(normalized?.text).toBe("Shared text");
+      expect(normalized?.originalText).toBe("Shared text");
+      expect(normalized?.fontSize).toBe(20);
+    });
+
+    it("quarantines incomplete type-specific records", () => {
+      const incompleteFreehand = normalizeElement({
+        id: "draw-bad",
+        type: "freedraw",
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+        angle: 0,
+        version: 1,
+        versionNonce: 1,
+      });
+      const incompleteText = normalizeElement({
+        id: "text-bad",
+        type: "text",
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+        angle: 0,
+        version: 1,
+        versionNonce: 1,
+      });
+
+      expect(incompleteFreehand).toBeNull();
+      expect(incompleteText).toBeNull();
+    });
+
     it("rejects element without id", () => {
       expect(normalizeElement({ type: "rectangle", x: 0, y: 0 })).toBeNull();
     });

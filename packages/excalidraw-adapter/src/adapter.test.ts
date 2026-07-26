@@ -35,6 +35,33 @@ function createRectangle(id: string, overrides: Partial<Record<string, unknown>>
   };
 }
 
+function createFreehand(id: string): ElementRecord {
+  return {
+    ...createRectangle(id),
+    type: "freedraw",
+    points: [[0, 0], [30, 20], [60, 5]],
+    pressures: [0.4, 0.8, 0.5],
+    simulatePressure: false,
+    lastCommittedPoint: null,
+  };
+}
+
+function createText(id: string, text: string): ElementRecord {
+  return {
+    ...createRectangle(id),
+    type: "text",
+    fontSize: 20,
+    fontFamily: 5,
+    text,
+    textAlign: "left",
+    verticalAlign: "top",
+    containerId: null,
+    originalText: text,
+    autoResize: true,
+    lineHeight: 1.25,
+  };
+}
+
 describe("ExcalidrawAdapter", () => {
   function createDoc(): Y.Doc {
     return new Y.Doc();
@@ -66,6 +93,25 @@ describe("ExcalidrawAdapter", () => {
 
     const order = ydoc.getArray("elementOrder");
     expect(order.toArray()).toEqual(["r1"]);
+  });
+
+  it("round-trips freehand points and collaborative text", () => {
+    const ydoc = createDoc();
+    const adapter = new ExcalidrawAdapter({ ydoc });
+
+    adapter.publishLocalScene([
+      createFreehand("draw-1"),
+      createText("text-1", "Shared text"),
+    ]);
+
+    const projection = adapter.reconstructScene();
+    expect(projection.elements).toHaveLength(2);
+    expect(projection.elements[0]?.points).toEqual([
+      [0, 0],
+      [30, 20],
+      [60, 5],
+    ]);
+    expect(projection.elements[1]?.text).toBe("Shared text");
   });
 
   it("publishes with local-excalidraw origin", () => {

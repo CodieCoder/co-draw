@@ -52,6 +52,7 @@ The cross-stage dependency sequence remains authoritative in the parent [MVP Imp
 | 0006 | [Stage 0E — Clean-Environment Onboarding and Continuous Validation](./0006-stage-0e-clean-environment-onboarding-and-ci.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-006` | Proposed | Passed |
 | 0007 | [Stage 1/2 — Core Collaboration Demo Slice](./0007-stage-1-2-core-collaboration-demo-slice.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `CAN-001`–`CAN-004`, `COL-001`–`COL-005`, `COL-006` subset | Proposed | Passed |
 | 0008 | [Core Collaboration Review Remediation](./0008-core-collaboration-review-remediation.md) | [Stage 1/2 Core Collaboration Demo Slice](./0007-stage-1-2-core-collaboration-demo-slice.md) | `CAN-001`–`CAN-004`, `COL-001`–`COL-005`, `COL-006` subset | Proposed | Passed |
+| 0009 | [Canvas Element Synchronization and Demo Hardening](./0009-canvas-element-sync-and-demo-hardening.md) | [Core Collaboration Review Remediation](./0008-core-collaboration-review-remediation.md) | `CAN-002`, `CAN-003`, `COL-006`, bounded JSON export | Proposed | Passed |
 
 ---
 

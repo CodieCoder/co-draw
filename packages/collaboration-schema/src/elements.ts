@@ -10,6 +10,7 @@ const SUPPORTED_ELEMENT_TYPES = new Set([
 ]);
 
 export interface NormalizedElement {
+  [key: string]: unknown;
   id: string;
   type: string;
   x: number;
@@ -60,6 +61,174 @@ export function isFiniteNumber(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v) && !Number.isNaN(v);
 }
 
+type NormalizedPoint = [number, number];
+
+function normalizePoint(raw: unknown): NormalizedPoint | null {
+  return Array.isArray(raw) &&
+    raw.length === 2 &&
+    isFiniteNumber(raw[0]) &&
+    isFiniteNumber(raw[1])
+    ? [raw[0], raw[1]]
+    : null;
+}
+
+function normalizePoints(raw: unknown): NormalizedPoint[] | null {
+  if (!Array.isArray(raw)) return null;
+  const points: NormalizedPoint[] = [];
+  for (const candidate of raw) {
+    const point = normalizePoint(candidate);
+    if (!point) return null;
+    points.push(point);
+  }
+  return points;
+}
+
+function normalizeBinding(
+  raw: unknown,
+): Record<string, unknown> | null | undefined {
+  if (raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) return undefined;
+
+  const binding = raw as Record<string, unknown>;
+  if (
+    !isValidElementId(binding.elementId) ||
+    !isFiniteNumber(binding.focus) ||
+    !isFiniteNumber(binding.gap)
+  ) {
+    return undefined;
+  }
+
+  const normalized: Record<string, unknown> = {
+    elementId: binding.elementId,
+    focus: binding.focus,
+    gap: binding.gap,
+  };
+  if (binding.fixedPoint !== undefined) {
+    const fixedPoint = normalizePoint(binding.fixedPoint);
+    if (!fixedPoint) return undefined;
+    normalized.fixedPoint = fixedPoint;
+  }
+  return normalized;
+}
+
+// Excalidraw renderers require these fields. Stripping them produces
+// valid-looking shared records that can crash a remote canvas at render time.
+function normalizeTypeSpecificFields(
+  raw: Record<string, unknown>,
+  type: string,
+): Record<string, unknown> | null {
+  if (type === "text") {
+    if (
+      !isFiniteNumber(raw.fontSize) ||
+      !isFiniteNumber(raw.fontFamily) ||
+      typeof raw.text !== "string" ||
+      typeof raw.textAlign !== "string" ||
+      typeof raw.verticalAlign !== "string" ||
+      (raw.containerId !== null && !isValidElementId(raw.containerId)) ||
+      typeof raw.originalText !== "string" ||
+      typeof raw.autoResize !== "boolean" ||
+      !isFiniteNumber(raw.lineHeight)
+    ) {
+      return null;
+    }
+    return {
+      fontSize: raw.fontSize,
+      fontFamily: raw.fontFamily,
+      text: raw.text,
+      textAlign: raw.textAlign,
+      verticalAlign: raw.verticalAlign,
+      containerId: raw.containerId,
+      originalText: raw.originalText,
+      autoResize: raw.autoResize,
+      lineHeight: raw.lineHeight,
+    };
+  }
+
+  if (type === "line" || type === "arrow") {
+    const points = normalizePoints(raw.points);
+    const lastCommittedPoint =
+      raw.lastCommittedPoint === null
+        ? null
+        : normalizePoint(raw.lastCommittedPoint);
+    const startBinding = normalizeBinding(raw.startBinding);
+    const endBinding = normalizeBinding(raw.endBinding);
+    if (
+      !points ||
+      (lastCommittedPoint === null && raw.lastCommittedPoint !== null) ||
+      startBinding === undefined ||
+      endBinding === undefined ||
+      (raw.startArrowhead !== null &&
+        typeof raw.startArrowhead !== "string") ||
+      (raw.endArrowhead !== null && typeof raw.endArrowhead !== "string")
+    ) {
+      return null;
+    }
+
+    const fields: Record<string, unknown> = {
+      points,
+      lastCommittedPoint,
+      startBinding,
+      endBinding,
+      startArrowhead: raw.startArrowhead,
+      endArrowhead: raw.endArrowhead,
+    };
+    if (type === "arrow") {
+      if (typeof raw.elbowed !== "boolean") return null;
+      fields.elbowed = raw.elbowed;
+    }
+    return fields;
+  }
+
+  if (type === "freedraw") {
+    const points = normalizePoints(raw.points);
+    const rawPressures = raw.pressures;
+    const pressures = Array.isArray(rawPressures)
+      ? rawPressures.filter(isFiniteNumber)
+      : null;
+    const lastCommittedPoint =
+      raw.lastCommittedPoint === null
+        ? null
+        : normalizePoint(raw.lastCommittedPoint);
+    if (
+      !points ||
+      !pressures ||
+      !Array.isArray(rawPressures) ||
+      pressures.length !== rawPressures.length ||
+      (lastCommittedPoint === null && raw.lastCommittedPoint !== null) ||
+      typeof raw.simulatePressure !== "boolean"
+    ) {
+      return null;
+    }
+    return {
+      points,
+      pressures,
+      simulatePressure: raw.simulatePressure,
+      lastCommittedPoint,
+    };
+  }
+
+  if (type === "image") {
+    const scale = normalizePoint(raw.scale);
+    if (
+      (raw.fileId !== null && typeof raw.fileId !== "string") ||
+      !["pending", "saved", "error"].includes(String(raw.status)) ||
+      !scale ||
+      (raw.crop !== null &&
+        (typeof raw.crop !== "object" || Array.isArray(raw.crop)))
+    ) {
+      return null;
+    }
+    return {
+      fileId: raw.fileId,
+      status: raw.status,
+      scale,
+      crop: raw.crop,
+    };
+  }
+
+  return {};
+}
+
 export function normalizeElement(raw: Record<string, unknown>): NormalizedElement | null {
   const id = raw.id;
   if (!isValidElementId(id)) return null;
@@ -80,7 +249,10 @@ export function normalizeElement(raw: Record<string, unknown>): NormalizedElemen
 
   const version = raw.version;
   const versionNonce = raw.versionNonce;
-  if (typeof version !== "number" || typeof versionNonce !== "number") return null;
+  if (!isFiniteNumber(version) || !isFiniteNumber(versionNonce)) return null;
+
+  const typeSpecificFields = normalizeTypeSpecificFields(raw, type);
+  if (!typeSpecificFields) return null;
 
   return {
     id,
@@ -109,6 +281,7 @@ export function normalizeElement(raw: Record<string, unknown>): NormalizedElemen
     link: typeof raw.link === "string" ? raw.link : null,
     locked: Boolean(raw.locked),
     roundness: raw.roundness != null ? (raw.roundness as { type: number; value?: number }) : null,
+    ...typeSpecificFields,
   };
 }
 
