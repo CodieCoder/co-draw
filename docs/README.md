@@ -8,7 +8,7 @@
 
 **Product phase:** Two-day MVP / Hackathon
 
-**Last updated:** 25 July 2026
+**Last updated:** 26 July 2026
 
 **Primary owners:** Product, Engineering, Architecture, and QA
 
@@ -41,7 +41,11 @@ The current implementation-ready baseline consists of:
 - Accepted Architecture Decision Records.
 - Repository instructions in [`AGENTS.md`](../AGENTS.md).
 
-The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md) sequences the accepted work and evidence. Executable contract references will be added as implementation begins. Both must derive from the accepted baseline and must not introduce scope or architecture indirectly.
+The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md)
+sequences the accepted work and evidence. The proposed
+[foundation contract reference](./contracts/01-foundation-contracts.md)
+documents the executable Stage 0A representations. Both derive from the
+accepted baseline and must not introduce scope or architecture indirectly.
 
 ---
 
@@ -84,7 +88,7 @@ An unlabelled historical input is not authoritative merely because it exists in 
 | Architecture | [Architecture Documentation Index](./architecture/README.md) | Accepted system ownership, domain flows, interfaces, security, testing, and operations. |
 | Decisions | [Architecture Decision Records](./adr/README.md) | Accepted decision history and rationale. |
 | Planning | [Planning Documentation Index](./planning/README.md) | Proposed implementation sequencing, decision gates, acceptance traceability, testing, and delivery risks derived from accepted scope. |
-| Contracts | `docs/contracts/` | Reserved for contract references backed by executable schemas and types. |
+| Contracts | [Contract Documentation Index](./contracts/README.md) | Executable foundation identifiers, roles, errors, health, and configuration references. |
 
 Current specialised authority remains in architecture until a non-duplicative supplemental index is added:
 
@@ -121,7 +125,8 @@ Empty or reserved documentation directories are not evidence that an additional 
 3. The applicable architecture reading path.
 4. The applicable ADRs.
 5. The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md).
-6. The executable contracts when present.
+6. The applicable plan from the [task-level plan index](./planning/plans/README.md).
+7. The [executable contract reference](./contracts/01-foundation-contracts.md).
 
 ## 6.4 Testing and release
 

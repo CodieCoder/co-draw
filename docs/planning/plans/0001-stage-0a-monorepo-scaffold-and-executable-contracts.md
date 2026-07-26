@@ -4,7 +4,7 @@
 
 **Document status:** Proposed
 
-**Execution status:** Ready
+**Execution status:** Passed
 
 **Parent plan:** [MVP Implementation Plan](../01-mvp-implementation-plan.md)
 
@@ -16,7 +16,7 @@
 
 **Completion statement:** Stage 0A is complete only when every included scaffold, contract, boundary, failure behaviour, documentation update, and mandatory quality gate is implemented, every row in the evidence matrix is `Passed`, and the final completion audit confirms that all definition-of-done items are proven.
 
-**Last updated:** 25 July 2026
+**Last updated:** 26 July 2026
 
 **Primary owners:** Engineering and QA
 
@@ -418,14 +418,14 @@ Install locked dependencies
 
 | Step | Action | Depends on | Required outputs | Verification | Status |
 | --- | --- | --- | --- | --- | --- |
-| `S0A-01` | Pin the runtime, package manager, exact dependency catalog, and reproducible workspace install. | None | Runtime-version files, root manifest, workspace definition, exact catalog, and lockfile. | Version inspection and `pnpm install --frozen-lockfile` complete without peer-dependency warnings. | Ready |
-| `S0A-02` | Establish the root build system and all accepted application and package boundaries. | `S0A-01` | Turbo tasks, strict TypeScript references, flat ESLint configuration, CSS convention, three application workspaces, and ten private package workspaces. | `pnpm build`, `pnpm typecheck`, `pnpm lint`, workspace enumeration, and boundary inspection pass. | Not started |
-| `S0A-03` | Implement the identifier, role, error, health, and configuration contracts test-first. | `S0A-02` | Runtime schemas, branded types, pure configuration parsers, public exports, and focused tests. | Contract tests, negative-path assertions, and strict typechecking pass. | Not started |
-| `S0A-04` | Implement the accessible web status shell and its bounded configuration failure state. | `S0A-03` | Built web shell with public configuration only and no canvas, router, store, or mocked collaboration. | Web smoke assertions, bundle inspection, performance gate, and accessibility gate pass. | Not started |
-| `S0A-05` | Implement the NestJS/Fastify API shell with truthful health semantics. | `S0A-03` | Built API shell with live `200`, deliberate ready `503`, strict health envelopes, and no fabricated domain routes. | API smoke assertions prove both status codes and redacted response shapes. | Not started |
-| `S0A-06` | Implement the Hocuspocus collaboration shell with truthful health and fail-closed room access. | `S0A-03` | Built collaboration shell with live `200`, deliberate ready `503`, and stable rejection before room state is created. | HTTP and WebSocket smoke assertions prove health and connection rejection. | Not started |
-| `S0A-07` | Enforce import boundaries and run the combined foundation quality gates. | `S0A-04`, `S0A-05`, `S0A-06` | Boundary rules, exact Excalidraw compatibility proof, root check, coverage result, bundle report, and web-performance result. | `pnpm check`, `pnpm smoke:apps`, `pnpm test:coverage`, `pnpm bundle:report`, and `pnpm performance:web` pass; focused source and bundle inspections pass. | Not started |
-| `S0A-08` | Reconcile documentation and execute the final completion audit. | `S0A-07` | Updated root and contract documentation, generated-artifact policy, decision records, plan record, index status, and completed evidence matrix. | Documentation checks, privacy and architecture searches, full diff review, and every [Section 18](#18-definition-of-done) item pass. | Not started |
+| `S0A-01` | Pin the runtime, package manager, exact dependency catalog, and reproducible workspace install. | None | Runtime-version files, root manifest, workspace definition, exact catalog, and lockfile. | Version inspection and `pnpm install --frozen-lockfile` complete without peer-dependency warnings. | Passed |
+| `S0A-02` | Establish the root build system and all accepted application and package boundaries. | `S0A-01` | Turbo tasks, strict TypeScript references, flat ESLint configuration, CSS convention, three application workspaces, and ten private package workspaces. | `pnpm build`, `pnpm typecheck`, `pnpm lint`, workspace enumeration, and boundary inspection pass. | Passed |
+| `S0A-03` | Implement the identifier, role, error, health, and configuration contracts test-first. | `S0A-02` | Runtime schemas, branded types, pure configuration parsers, public exports, and focused tests. | Contract tests, negative-path assertions, and strict typechecking pass. | Passed |
+| `S0A-04` | Implement the accessible web status shell and its bounded configuration failure state. | `S0A-03` | Built web shell with public configuration only and no canvas, router, store, or mocked collaboration. | Web smoke assertions, bundle inspection, performance gate, and accessibility gate pass. | Passed |
+| `S0A-05` | Implement the NestJS/Fastify API shell with truthful health semantics. | `S0A-03` | Built API shell with live `200`, deliberate ready `503`, strict health envelopes, and no fabricated domain routes. | API smoke assertions prove both status codes and redacted response shapes. | Passed |
+| `S0A-06` | Implement the Hocuspocus collaboration shell with truthful health and fail-closed room access. | `S0A-03` | Built collaboration shell with live `200`, deliberate ready `503`, and stable rejection before room state is created. | HTTP and WebSocket smoke assertions prove health and connection rejection. | Passed |
+| `S0A-07` | Enforce import boundaries and run the combined foundation quality gates. | `S0A-04`, `S0A-05`, `S0A-06` | Boundary rules, exact Excalidraw compatibility proof, root check, coverage result, bundle report, and web-performance result. | `pnpm check`, `pnpm smoke:apps`, `pnpm test:coverage`, `pnpm bundle:report`, and `pnpm performance:web` pass; focused source and bundle inspections pass. | Passed |
+| `S0A-08` | Reconcile documentation and execute the final completion audit. | `S0A-07` | Updated root and contract documentation, generated-artifact policy, decision records, plan record, index status, and completed evidence matrix. | Documentation checks, privacy and architecture searches, full diff review, and every [Section 18](#18-definition-of-done) item pass. | Passed |
 
 Execution rules:
 
@@ -510,15 +510,15 @@ The application smoke checks in this plan are process- and protocol-level checks
 
 | Requirement | Done condition | Proof command or artifact | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| `E-01` — Reproducible workspace | The pinned Node and pnpm versions are active; every workspace resolves from the exact catalog and generated lockfile without peer warnings. | Version-file and manifest inspection; `node --version`; `pnpm --version`; `pnpm install --frozen-lockfile`. | Pending | Pending |
-| `E-02` — Executable contracts | Identifier, role, error, health, and configuration contracts accept valid input, reject required invalid input, redact failures, preserve branded type separation, and document the PostgreSQL `uuid` mapping. | `pnpm test`; `pnpm typecheck`; focused contract-test report and identifier rationale. | Pending | Pending |
-| `E-03` — Package and import boundaries | Three applications and ten accepted private packages exist; forbidden imports and a second scene model are absent. | Workspace enumeration; `pnpm lint`; `pnpm typecheck`; focused source and dependency-graph inspection. | Pending | Pending |
-| `E-04` — Web shell | The built web shell renders valid and invalid public-configuration states, exposes no server secret, and passes its accessibility, bundle, and performance gates. | `pnpm smoke:apps`; `pnpm bundle:report`; `pnpm performance:web`; web bundle inspection. | Pending | Pending |
-| `E-05` — API shell | The built API reports live `200`, ready `503 not_ready`, a strict redacted response, and no fabricated domain routes. | `pnpm smoke:apps`; captured bounded API smoke assertions. | Pending | Pending |
-| `E-06` — Collaboration shell | The built collaboration service reports live `200`, ready `503 not_ready`, and rejects every room connection before room state exists. | `pnpm smoke:apps`; captured bounded HTTP and WebSocket assertions. | Pending | Pending |
-| `E-07` — Integrated quality and compatibility | Root build, lint, strict typecheck, tests, coverage, exact Excalidraw compatibility, bundle reporting, and web-performance gates pass. | `pnpm check`; `pnpm test:coverage`; `pnpm bundle:report`; `pnpm performance:web`; installed-version inspection. | Pending | Pending |
-| `E-08` — Documentation and privacy | Root and contract documentation match executable behaviour; relative links resolve; generated artifacts are handled; no private or secret data enters source, logs, reports, or examples. | `pnpm docs:check`; generated-artifact inspection; bounded privacy search; documentation diff review. | Pending | Pending |
-| `E-09` — Scope and completion integrity | No excluded package or product behaviour is claimed; later work packages remain not started; the final diff is cleanly scoped and preserves unrelated changes. | Targeted forbidden-scope search; `git status --short`; `git diff --check`; full diff and plan/index review. | Pending | Pending |
+| `E-01` — Reproducible workspace | The pinned Node and pnpm versions are active; every workspace resolves from the exact catalog and generated lockfile without peer warnings. | Version-file and manifest inspection; `node --version`; `pnpm --version`; `pnpm install --frozen-lockfile`. | Passed — 26 July 2026 | Node `v24.18.0`; pnpm `11.17.0`; frozen install passed; `pnpm peers check` reported no issues; recursive workspace listing reported the root plus 13 private child workspaces. |
+| `E-02` — Executable contracts | Identifier, role, error, health, and configuration contracts accept valid input, reject required invalid input, redact failures, preserve branded type separation, and document the PostgreSQL `uuid` mapping. | `pnpm test`; `pnpm typecheck`; focused contract-test report and identifier rationale. | Passed — 26 July 2026 | Strict test-aware typechecking passed; 17 focused configuration and contract tests passed, including UUIDv7 canonicalisation, brand distinction, exact role/error registries, ready/not-ready health shapes, invalid versions/ports/origins, required non-local fields, and redacted configuration failures. The PostgreSQL `uuid` mapping is documented in the contract reference. |
+| `E-03` — Package and import boundaries | Three applications and ten accepted private packages exist; forbidden imports and a second scene model are absent. | Workspace enumeration; `pnpm lint`; `pnpm typecheck`; focused source and dependency-graph inspection. | Passed — 26 July 2026 | Recursive enumeration and the structural verifier confirm exactly three applications and ten private packages. Typed linting and strict typechecking pass; the source scan rejects Excalidraw imports outside the adapter, production test-utility imports, server configuration in web, and named second-scene-model patterns. |
+| `E-04` — Web shell | The built web shell renders valid and invalid public-configuration states, exposes no server secret, and passes its accessibility, bundle, and performance gates. | `pnpm smoke:apps`; `pnpm bundle:report`; `pnpm performance:web`; web bundle inspection. | Passed — 26 July 2026 | Browser inspection proved one semantic main region, one `h1`, no horizontal overflow, no console warnings, and a redacted `role="alert"` for invalid public configuration. Final Lighthouse performance and accessibility both scored `1.00`; LCP was `1,399.35 ms`. The measurement-only bundle report records `74,270` gzip bytes for application JavaScript. |
+| `E-05` — API shell | The built API reports live `200`, ready `503 not_ready`, a strict redacted response, and no fabricated domain routes. | `pnpm smoke:apps`; captured bounded API smoke assertions. | Passed — 26 July 2026 | Built NestJS/Fastify API returned the exact three-field liveness body with `200`, the exact five-field foundation-readiness body with `503`, and `404` for the unimplemented `/api/v1/rooms` route. |
+| `E-06` — Collaboration shell | The built collaboration service reports live `200`, ready `503 not_ready`, and rejects every room connection before room state exists. | `pnpm smoke:apps`; captured bounded HTTP and WebSocket assertions. | Passed — 26 July 2026 | Built Hocuspocus shell returned exact live `200` and foundation-ready `503` bodies, returned `404` for the unimplemented `/rooms` route, and rejected a raw room WebSocket upgrade with `403` plus `COLLAB_PERMISSION_DENIED` before the default upgrade handler ran. |
+| `E-07` — Integrated quality and compatibility | Root build, lint, strict typecheck, tests, coverage, exact Excalidraw compatibility, bundle reporting, and web-performance gates pass. | `pnpm check`; `pnpm test:coverage`; `pnpm bundle:report`; `pnpm performance:web`; installed-version inspection. | Passed — 26 July 2026 | `pnpm check`, application smoke, coverage, bundle, performance, boundary, and exact-version assertions pass. The installed adapter dependency is `@excalidraw/excalidraw@0.18.1`; its focused compatibility test passes without mounting a canvas. |
+| `E-08` — Documentation and privacy | Root and contract documentation match executable behaviour; relative links resolve; generated artifacts are handled; no private or secret data enters source, logs, reports, or examples. | `pnpm docs:check`; generated-artifact inspection; bounded privacy search; documentation diff review. | Passed — 26 July 2026 | Documentation verification resolved all local links across 37 Markdown files. Git ignore inspection covers build, coverage, cache, bundle, and Lighthouse output. Bounded source/output scans found no private data or secret assignment; the sole credential-shaped source value is the synthetic redaction fixture and it is absent from built and generated evidence. Smoke inspection also excludes server-only configuration names, secret names, and guest-email fields from the web bundle. |
+| `E-09` — Scope and completion integrity | No excluded package or product behaviour is claimed; later work packages remain not started; the final diff is cleanly scoped and preserves unrelated changes. | Targeted forbidden-scope search; `git status --short`; `git diff --check`; full diff and plan/index review. | Passed — 26 July 2026 | Full status/diff review contains only the Stage 0A scaffold, executable contracts, focused validation, and required documentation. Boundary and dependency scans found no deferred infrastructure, product route, second scene model, or forbidden import. `git diff --check` passes; `FND-003` through `FND-006` remain unclaimed; Stage 0 remains `In progress`; no commit, push, or pull request was created. |
 
 Every row is mandatory. Replace `Pending` with a dated, concise result or a durable artifact link when verification runs; do not paste credentials, private data, or unbounded command output.
 
@@ -541,6 +541,17 @@ During implementation:
 | Date | Checkpoint | Outcome | Verification | Next step |
 | --- | --- | --- | --- | --- |
 | 25 July 2026 | Goal-ready plan prepared | Ready for review and execution | Goal-readiness gate in [the task-plan index](./README.md#7-goal-readiness-gate) | Start `S0A-01` after implementation is requested. |
+| 25 July 2026 | Stage 0A implementation started | Source-of-truth review completed; active Node 24.15.0 and pnpm 11.9.0 differ from the planned Node 24.18.0 and pnpm 11.17.0 pins. | Local version inspection and repository status review. | Add the pinned workspace files, install with the pinned package manager, and prove the exact runtime. |
+| 26 July 2026 | Offline scaffold checkpoint | Node 24.18.0 was installed through the existing nvm setup; the catalog, three app shells, ten package boundaries, contracts, configuration, verification scripts, and supporting docs were drafted. Structural boundary verification and `git diff --check` pass. Documentation validation now fails only because the generated lockfile does not exist. | Exact runtime output; `node --check`; `node scripts/verify-boundaries.mjs`; `node scripts/docs-check.mjs`; `git diff --check`. | Obtain explicit approval for the networked pinned install, generate the lockfile, then compile and iterate through every executable gate. |
+| 26 July 2026 | Dependency-install approval remained unavailable for three consecutive goal turns | No safe remaining offline action can prove `S0A-01` or any dependent executable gate; the goal and plan are paused without a completion claim. | `pnpm-lock.yaml` remains absent; `BLK-001` remains open; install, build, test, smoke, coverage, bundle, and Lighthouse evidence is missing. | Resume after the user explicitly authorises the pinned dependency download and installation. |
+| 26 July 2026 | Dependency installation authorised | The user explicitly approved the pinned dependency download; execution resumed without changing scope or versions. | User approval in the active goal thread. | Install under Node 24.18.0, review the generated lockfile and peer output, and run the frozen reinstall proof. |
+| 26 July 2026 | `S0A-01` passed | Exact runtime and package-manager pins are active; the exact catalog generated a lockfile; the frozen reinstall and peer check pass for all 14 workspace projects. | `node --version`; `pnpm --version`; `pnpm install --frozen-lockfile`; `pnpm peers check`; `pnpm list --depth -1 --recursive`. | Run build, typecheck, lint, and boundary checks for `S0A-02`. |
+| 26 July 2026 | `S0A-02` passed | The root build, strict typecheck, zero-warning lint, workspace enumeration, and structural boundary verification pass across the accepted three applications and ten packages. Shared TypeScript presets now leave filesystem paths to each consumer, and typed linting covers contract tests. | `pnpm build`; `pnpm typecheck`; `pnpm lint`; `pnpm list --depth -1 --recursive`. | Run the focused identifier, role, error, health, configuration, and compatibility tests for `S0A-03`. |
+| 26 July 2026 | `S0A-03` passed | Runtime-validated UUIDv7 identifiers, branded types, exact roles and error registries, strict health envelopes, and pure configuration parsers passed their positive and negative tests. Test sources are typechecked without entering production build output. | `pnpm typecheck`; `pnpm test`; `pnpm lint`; contract documentation review. | Exercise the web shell's valid and invalid public-configuration states and run its accessibility and performance evidence for `S0A-04`. |
+| 26 July 2026 | `S0A-04` passed | The built desktop-first shell rendered valid and invalid public-configuration states without console warnings or horizontal overflow. The failure state is an accessible alert and withholds rejected values. Performance, accessibility, LCP, and measurement-only bundle evidence all pass. | Browser DOM and visual inspection; `pnpm test`; `pnpm bundle:report`; `pnpm performance:web`. | Exercise API live, ready, and unknown-route behaviour for `S0A-05`. |
+| 26 July 2026 | `S0A-05` and `S0A-06` passed | The built API and collaboration services return exact live and deliberately not-ready health contracts; speculative HTTP routes remain absent. Collaboration rejects the raw WebSocket upgrade with the stable permission reason before the default room upgrade path. | `pnpm smoke:apps`; exact status/body assertions; raw upgrade assertion. | Run the combined root, coverage, bundle, compatibility, boundary, and performance gates for `S0A-07`. |
+| 26 July 2026 | `S0A-07` passed | Root build/lint/typecheck/test, integrated smoke, coverage, measurement-only bundle, Lighthouse, import-boundary, bundle-secret, and exact Excalidraw compatibility checks all pass. | `pnpm check`; `pnpm smoke:apps`; `pnpm test:coverage`; `pnpm bundle:report`; `pnpm performance:web`; installed dependency inspection. | Reconcile documentation, plan indexes, privacy/scope searches, generated artifacts, and the completion checklist for `S0A-08`. |
+| 26 July 2026 | `S0A-08` passed and completion audit closed | Root, contribution, contract, planning, and goal-execution documentation matches the scaffold. All links, privacy/scope scans, generated-artifact checks, current executable gates, evidence rows, and definition-of-done items pass; no unresolved blocker remains. | `pnpm docs:check`; bounded privacy and scope scans; generated-artifact inspection; `git status --short`; `git diff --check`; full plan/index review. | Preserve the completed Stage 0A record; begin `FND-003` only through a separately authorised plan. |
 
 Update this log at meaningful checkpoints. Do not use it as a substitute for step status or evidence.
 
@@ -548,10 +559,11 @@ Update this log at meaningful checkpoints. Do not use it as a substitute for ste
 
 | ID | Type | Description | Evidence | Resolution |
 | --- | --- | --- | --- | --- |
-| `DEC-001` | Decision | Use the exact runtime and dependency versions listed in [Section 6.2](#62-runtime-and-package-versions). | Parent-plan decision gate and upstream compatibility sources linked in Section 6.2. | Selected for Stage 0A; verify compatibility through `S0A-01`, `E-01`, and `E-07`. |
-| `DEC-002` | Decision | Use runtime-validated, branded UUIDv7 identifiers with lowercase canonical output. | Parent-plan decision gate and the executable contract requirements in [Section 10.1](#101-identifiers). | Selected for Stage 0A; verify through `S0A-03` and `E-02`. |
+| `DEC-001` | Decision | Use the exact runtime and dependency versions listed in [Section 6.2](#62-runtime-and-package-versions). | Parent-plan decision gate and upstream compatibility sources linked in Section 6.2. | Implemented and verified through `S0A-01`, `E-01`, and `E-07`. |
+| `DEC-002` | Decision | Use runtime-validated, branded UUIDv7 identifiers with lowercase canonical output. | Parent-plan decision gate and the executable contract requirements in [Section 10.1](#101-identifiers). | Implemented and verified through `S0A-03` and `E-02`. |
+| `BLK-001` | Blocker | The managed environment required explicit user approval before downloading and installing the full workspace dependency set. | The networked pinned-install escalation was declined until the user explicitly approved it on 26 July 2026. | Resolved; the exact install, frozen reinstall, and peer checks passed under `S0A-01` and `E-01`. |
 
-No blocker is known at plan readiness. Add a stable `BLK-NNN` row with the exact failed dependency, evidence, scope consequence, and required resolution before marking an execution step `Blocked`.
+Add a stable `BLK-NNN` row with the exact failed dependency, evidence, scope consequence, and required resolution before marking an execution step `Blocked`.
 
 ## 17.3 Assumptions
 
@@ -567,23 +579,23 @@ No blocker is known at plan readiness. Add a stable `BLK-NNN` row with the exact
 
 Stage 0A passes only when:
 
-- [ ] `FND-001` and `FND-002` meet the parent plan's required proof. (`E-01` through `E-09`)
-- [ ] The pinned Node, pnpm, dependency catalog, and generated lockfile exist as reproducible implementation artifacts. (`E-01`)
-- [ ] All three built application shells launch through documented commands. (`E-04`, `E-05`, `E-06`)
-- [ ] The web shell handles valid and invalid public configuration safely. (`E-04`)
-- [ ] API and collaboration liveness return `200`. (`E-05`, `E-06`)
-- [ ] API and collaboration readiness truthfully return `503 not_ready` until `FND-003`. (`E-05`, `E-06`)
-- [ ] Every collaboration room connection is rejected while authority and persistence remain unwired. (`E-06`)
-- [ ] All ten accepted package boundaries exist without speculative domain APIs. (`E-03`)
-- [ ] Identifier, role, error, health, and configuration contracts are runtime validated and typechecked. (`E-02`)
-- [ ] The required `DEC-001` and `DEC-002` records exist without implementing a deferred migration or test foundation. (`E-01`, `E-02`, `E-07`, `E-08`)
-- [ ] Import boundaries prevent Excalidraw leakage, server-config leakage, test-utils production imports, and a second canvas model. (`E-03`)
-- [ ] Contract, compatibility, application-smoke, build, lint, typecheck, coverage, bundle-report, and performance gates pass. (`E-07`)
-- [ ] Root and contract documentation matches the executable scaffold. (`E-08`)
-- [ ] Relative links, plan indexes, privacy searches, generated-artifact checks, and `git diff --check` pass. (`E-08`, `E-09`)
-- [ ] `FND-003` through `FND-006` remain unclaimed and Stage 0 remains `In progress`. (`E-09`)
-- [ ] The execution record contains no unresolved blocker or decision that changes the completion criteria. (`E-09`)
-- [ ] The final diff preserves unrelated user changes and contains no unintended artifact. (`E-09`)
+- [x] `FND-001` and `FND-002` meet the parent plan's required proof. (`E-01` through `E-09`)
+- [x] The pinned Node, pnpm, dependency catalog, and generated lockfile exist as reproducible implementation artifacts. (`E-01`)
+- [x] All three built application shells launch through documented commands. (`E-04`, `E-05`, `E-06`)
+- [x] The web shell handles valid and invalid public configuration safely. (`E-04`)
+- [x] API and collaboration liveness return `200`. (`E-05`, `E-06`)
+- [x] API and collaboration readiness truthfully return `503 not_ready` until `FND-003`. (`E-05`, `E-06`)
+- [x] Every collaboration room connection is rejected while authority and persistence remain unwired. (`E-06`)
+- [x] All ten accepted package boundaries exist without speculative domain APIs. (`E-03`)
+- [x] Identifier, role, error, health, and configuration contracts are runtime validated and typechecked. (`E-02`)
+- [x] The required `DEC-001` and `DEC-002` records exist without implementing a deferred migration or test foundation. (`E-01`, `E-02`, `E-07`, `E-08`)
+- [x] Import boundaries prevent Excalidraw leakage, server-config leakage, test-utils production imports, and a second canvas model. (`E-03`)
+- [x] Contract, compatibility, application-smoke, build, lint, typecheck, coverage, bundle-report, and performance gates pass. (`E-07`)
+- [x] Root and contract documentation matches the executable scaffold. (`E-08`)
+- [x] Relative links, plan indexes, privacy searches, generated-artifact checks, and `git diff --check` pass. (`E-08`, `E-09`)
+- [x] `FND-003` through `FND-006` remain unclaimed and Stage 0 remains `In progress`. (`E-09`)
+- [x] The execution record contains no unresolved blocker or decision that changes the completion criteria. (`E-09`)
+- [x] The final diff preserves unrelated user changes and contains no unintended artifact. (`E-09`)
 
 ## 18.1 Completion audit
 

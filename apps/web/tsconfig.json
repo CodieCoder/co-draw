@@ -1,0 +1,12 @@
+{
+  "extends": "@vega/typescript-config/react-app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
+  "references": [
+    {
+      "path": "../../packages/config"
+    }
+  ]
+}

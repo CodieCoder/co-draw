@@ -6,7 +6,7 @@
 
 **Document status:** Accepted
 
-**Last updated:** 25 July 2026
+**Last updated:** 26 July 2026
 
 **Primary owners:** Product, Engineering, and QA
 
@@ -24,6 +24,10 @@ A goal-ready plan is an execution contract. It tells the goal agent:
 - The ordered checkpoints it can execute.
 - The proof required for each checkpoint.
 - The single verifiable condition at which it may stop.
+
+The plan must be executable without hidden chat context or provider-specific
+model behaviour. Fix every material choice in the plan, or give bounded
+selection criteria and require the selected artifact to be recorded.
 
 Copy the plan skeleton below into the next numbered file described by the [Task-Level Implementation Plan Index](./README.md). Replace every bracketed placeholder and remove guidance that does not apply.
 
@@ -97,6 +101,10 @@ Provide a ready-to-run objective that points to this persisted file:
 
 Keep the `/goal` objective concise. Put implementation detail in the plan rather than duplicating it in the command.
 
+Do not name the executing model or provider unless that identity is itself part
+of the product contract. An execution surface without `/goal` should use the
+same handoff text without the command prefix.
+
 ---
 
 # 3. Authoritative sources and constraints
@@ -143,11 +151,14 @@ Record only facts that affect execution:
 
 - Existing files or implementation baseline.
 - Known local tool versions.
+- Dependency-install, local-service, network, or approval prerequisites.
 - Existing user changes that must be preserved.
 - Decisions already resolved.
 - Assumptions the agent must verify before relying on them.
 
-An unverified assumption cannot serve as completion evidence.
+An existing dependency directory or generated artifact does not prove that the
+active toolchain and required services are correct. An unverified assumption
+cannot serve as completion evidence.
 
 ---
 

@@ -8,7 +8,7 @@
 
 **Product phase:** Two-day MVP / Hackathon
 
-**Last updated:** 25 July 2026
+**Last updated:** 26 July 2026
 
 **Primary owners:** Product, Engineering, and QA
 
@@ -44,7 +44,8 @@ The cross-stage dependency sequence remains authoritative in the parent [MVP Imp
 
 | No. | Plan | Parent plan | Work packages | Document status | Execution status |
 | ---: | --- | --- | --- | --- | --- |
-| 0001 | [Stage 0A — Monorepo Scaffold and Executable Contracts](./0001-stage-0a-monorepo-scaffold-and-executable-contracts.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-001`, `FND-002` | Proposed | Ready |
+| 0001 | [Stage 0A — Monorepo Scaffold and Executable Contracts](./0001-stage-0a-monorepo-scaffold-and-executable-contracts.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-001`, `FND-002` | Proposed | Passed |
+| 0002 | [Stage 0B — Local Persistence Infrastructure and Truthful Readiness](./0002-stage-0b-local-persistence-infrastructure-and-readiness.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-003` | Proposed | Ready |
 
 ---
 
@@ -74,6 +75,13 @@ The workflow is:
 ```
 
 Codex guidance for [following a goal](https://learn.chatgpt.com/use-cases/follow-goals), [long-running work](https://learn.chatgpt.com/docs/long-running-work), and [developer commands](https://learn.chatgpt.com/docs/developer-commands?surface=cli) recommends one objective and stopping condition, authoritative inputs, proof commands or artifacts, checkpoints, and a short progress record. It also recommends putting longer instructions in a file and pointing `/goal` at that file.
+
+Task plans and handoffs must remain model- and provider-neutral. They must not
+depend on hidden chat history, unstated model defaults, or agent memory. Every
+material implementation choice must be either fixed in the plan or bounded by
+explicit selection criteria and a required evidence record. On an execution
+surface without `/goal`, use the handoff text as the task objective without the
+command prefix.
 
 ---
 
@@ -142,6 +150,11 @@ A plan may use execution status `Ready` only when:
 
 - It defines one outcome and one verifiable stopping condition.
 - Its authoritative inputs exist and all material contradictions are resolved.
+- It is self-contained and model-neutral: no required instruction exists only
+  in chat, and no material choice relies on a provider-specific default.
+- Known runtime, dependency-install, local-service, network, and approval
+  prerequisites are explicit; unverified environment state remains an
+  assumption to check during execution.
 - Included, excluded, and allowed incidental changes are explicit.
 - Deliverables have clear owning boundaries.
 - Execution steps have stable IDs, real dependencies, concrete outputs, and proof.
@@ -201,6 +214,9 @@ The goal agent must:
 - Treat the persisted plan as the durable execution contract.
 - Project only the current checkpoints into its in-chat task plan.
 - Preserve the original objective and scope across turns.
+- Run a preflight before the first implementation mutation: inspect the
+  worktree, verify pinned tool versions, and identify required local services,
+  network access, or approvals.
 - Update the persisted plan at meaningful checkpoints rather than relying on chat history.
 - Verify assumptions before treating them as facts.
 - Keep at most one execution step `In progress` unless the plan explicitly authorizes isolated parallel work.

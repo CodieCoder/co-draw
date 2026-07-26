@@ -1,0 +1,26 @@
+{
+  "name": "@vega/collaboration",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -b",
+    "start": "node dist/main.js",
+    "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@hocuspocus/server": "catalog:",
+    "@vega/config": "workspace:*",
+    "@vega/contracts": "workspace:*",
+    "y-protocols": "catalog:",
+    "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vega/typescript-config": "workspace:*",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -2,8 +2,23 @@
 /resources/*
 !/resources/README.md
 
-# node_modules
-/node_modules/*
+# dependencies and package-manager state
+node_modules/
+.pnpm-store/
 
-# DS_Store
+# generated build, test, and performance artifacts
+dist/
+coverage/
+.turbo/
+.vite/
+reports/
+lighthouse-*.report.*
+
+# local environment files
+.env
+.env.*
+!.env.example
+
+# editor and operating-system files
 .DS_Store
+*.log

@@ -33,6 +33,15 @@ Before implementation, read the applicable task-level plan under `docs/planning/
 
 Files under `resources/` and the superseded `docs/00-Project description.md` are historical source material. They are non-authoritative and must not override accepted documentation.
 
+## Toolchain and package-manager rules
+
+- This is a pnpm-only workspace. Do not use npm, Yarn, or Bun to install dependencies or run repository scripts.
+- Before executable work, activate the runtime from `.nvmrc` and verify the exact versions with `node --version` and `corepack pnpm --version`.
+- Prefer `corepack pnpm <command>` so execution does not depend on a globally installed pnpm binary or an nvm-version-specific Corepack shim.
+- If an interactive shell needs plain `pnpm`, run `corepack enable pnpm` after selecting the pinned Node version and then refresh the shell command cache with `hash -r`.
+- Do not treat an existing `node_modules` directory as proof that the active runtime or package-manager binary is correct.
+- If npm reports unknown `.npmrc` settings or Turbo cannot find the package-manager binary, correct the active Node/Corepack setup; do not regenerate the lockfile or change pnpm configuration as a workaround.
+
 ## Core architectural decisions
 
 - Excalidraw is the only canvas rendering and editing engine.

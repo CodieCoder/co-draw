@@ -1,0 +1,57 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  # Vite's optional esbuild path verifies its platform binary at install time.
+  esbuild: true
+
+peerDependencyRules:
+  allowedVersions:
+    # Excalidraw 0.18.1 explicitly supports React 19; its pinned Radix
+    # transitive dependencies retain older peer metadata.
+    react: 19.2.8
+    react-dom: 19.2.8
+
+catalog:
+  "@eslint/js": 9.39.5
+  "@excalidraw/excalidraw": 0.18.1
+  "@hocuspocus/server": 4.4.0
+  "@nestjs/common": 11.1.28
+  "@nestjs/core": 11.1.28
+  "@nestjs/platform-fastify": 11.1.28
+  "@types/node": 24.13.3
+  "@types/react": 19.2.17
+  "@types/react-dom": 19.2.3
+  "@vitejs/plugin-react": 6.0.4
+  "@vitest/coverage-v8": 4.1.10
+  eslint: 9.39.5
+  eslint-plugin-jsx-a11y: 6.10.2
+  eslint-plugin-react: 7.37.5
+  eslint-plugin-react-hooks: 7.1.1
+  fastify: 5.10.0
+  globals: 17.7.0
+  lighthouse: 13.4.1
+  react: 19.2.8
+  react-dom: 19.2.8
+  reflect-metadata: 0.2.2
+  rxjs: 7.8.2
+  tsx: 4.23.1
+  turbo: 2.10.7
+  typescript: 6.0.3
+  typescript-eslint: 8.65.0
+  uuid: 14.0.1
+  vite: 8.1.5
+  vitest: 4.1.10
+  y-protocols: 1.0.7
+  yjs: 13.6.31
+  zod: 4.4.3
+
+minimumReleaseAgeExclude:
+  - '@turbo/darwin-64@2.10.7'
+  - '@turbo/darwin-arm64@2.10.7'
+  - '@turbo/linux-64@2.10.7'
+  - '@turbo/linux-arm64@2.10.7'
+  - '@turbo/windows-64@2.10.7'
+  - '@turbo/windows-arm64@2.10.7'
+  - turbo@2.10.7

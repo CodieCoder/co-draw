@@ -1,0 +1,302 @@
+.shell {
+  --ink: #111815;
+  --paper: #e8e5da;
+  --signal: #b7ff62;
+  --signal-muted: #93b96e;
+  --warning: #ff725e;
+  --line: rgb(232 229 218 / 20%);
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: clamp(1.25rem, 4vw, 3.5rem);
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.shell::before {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+  content: "";
+  opacity: 0.22;
+}
+
+.orbit {
+  position: absolute;
+  z-index: -1;
+  top: -17rem;
+  right: -10rem;
+  width: 43rem;
+  height: 43rem;
+  border: 1px solid rgb(183 255 98 / 36%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 5rem rgb(183 255 98 / 3%),
+    0 0 0 11rem rgb(183 255 98 / 2%);
+}
+
+.masthead,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.masthead {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: inherit;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.identity:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 0.35rem;
+}
+
+.signalMark {
+  width: 2rem;
+  height: 2rem;
+  fill: none;
+  stroke: var(--signal);
+  stroke-linecap: square;
+  stroke-width: 2;
+}
+
+.stage,
+.eyebrow,
+.kicker {
+  margin: 0;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.stage {
+  color: rgb(232 229 218 / 72%);
+}
+
+.intro {
+  width: min(53rem, 100%);
+  margin: clamp(5rem, 14vh, 9rem) 0 clamp(2.5rem, 7vh, 4.5rem);
+}
+
+.kicker,
+.eyebrow {
+  color: var(--signal-muted);
+}
+
+.intro h1 {
+  max-width: 14ch;
+  margin: 0.65rem 0 1rem;
+  font-family: Iowan Old Style, Charter, "Times New Roman", serif;
+  font-size: clamp(3.25rem, 9vw, 7.5rem);
+  font-weight: 500;
+  letter-spacing: -0.065em;
+  line-height: 0.9;
+}
+
+.lede {
+  max-width: 42rem;
+  margin: 0;
+  color: rgb(232 229 218 / 72%);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-size: clamp(1rem, 2vw, 1.22rem);
+  line-height: 1.6;
+}
+
+.panel {
+  width: min(68rem, 100%);
+  padding: clamp(1.35rem, 3vw, 2.25rem);
+  border: 1px solid rgb(183 255 98 / 42%);
+  background: rgb(7 12 10 / 76%);
+  box-shadow: 0.8rem 0.8rem 0 rgb(183 255 98 / 8%);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 1.5rem;
+}
+
+.panelHeader h2 {
+  margin: 0.45rem 0 0;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.readyBadge,
+.failureBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid currentColor;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.readyBadge {
+  color: var(--signal);
+}
+
+.readyBadge > span {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: currentColor;
+  box-shadow: 0 0 0 0.25rem rgb(183 255 98 / 12%);
+}
+
+.failureBadge {
+  color: var(--warning);
+}
+
+.manifest {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.manifest div {
+  min-width: 0;
+  padding: 1rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.manifest dt {
+  margin-bottom: 0.45rem;
+  color: rgb(232 229 218 / 68%);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.manifest dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  line-height: 1.45;
+}
+
+.boundaryNote,
+.failureCopy,
+.redactionNote {
+  max-width: 50rem;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+.boundaryNote {
+  margin: 1.35rem 0 0;
+  color: rgb(232 229 218 / 72%);
+}
+
+.failurePanel {
+  border-color: rgb(255 114 94 / 50%);
+  box-shadow: 0.8rem 0.8rem 0 rgb(255 114 94 / 8%);
+}
+
+.failureCopy {
+  color: rgb(232 229 218 / 72%);
+}
+
+.issueList {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.5rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.issueList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--warning);
+  background: rgb(255 114 94 / 7%);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+.issueList span {
+  color: rgb(232 229 218 / 68%);
+}
+
+.redactionNote {
+  margin-bottom: 0;
+  color: rgb(232 229 218 / 68%);
+  font-size: 0.82rem;
+}
+
+.footer {
+  align-items: flex-end;
+  margin-top: clamp(4rem, 10vh, 7rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  color: rgb(232 229 218 / 68%);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 44rem) {
+  .stage {
+    max-width: 12rem;
+    text-align: right;
+  }
+
+  .panelHeader,
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .manifest {
+    grid-template-columns: 1fr;
+  }
+
+  .issueList li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .readyBadge > span {
+    animation: signal 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes signal {
+  50% {
+    opacity: 0.4;
+  }
+}

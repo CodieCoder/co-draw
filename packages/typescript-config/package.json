@@ -1,0 +1,15 @@
+{
+  "name": "@vega/typescript-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./library.json": "./library.json",
+    "./node-app.json": "./node-app.json",
+    "./react-app.json": "./react-app.json"
+  },
+  "files": [
+    "*.json"
+  ]
+}
