@@ -4,7 +4,7 @@
 
 **Document status:** Proposed
 
-**Execution status:** Ready
+**Execution status:** Passed
 
 **Parent plan:** [MVP Implementation Plan](../01-mvp-implementation-plan.md)
 
@@ -671,15 +671,15 @@ must remain distinguishable.
 
 | Step | Action | Depends on | Required outputs | Verification | Status |
 | --- | --- | --- | --- | --- | --- |
-| `S0B-01` | Run preflight and freeze infrastructure/package artifacts. | `FND-001`, `FND-002`, completed plan `0001` | Recorded runtime and Docker versions; exact package versions; exact PostgreSQL/MinIO/client image tags and digests; confirmed worktree boundary; known approvals and ports. | Version commands, official-artifact inspection, `git status --short`, catalog/Compose review. | Not started |
-| `S0B-02` | Add local environment, Compose topology, private bucket initialisation, and root lifecycle commands. | `S0B-01` | `compose.yaml`, placeholder `.env.example`, ignored local env policy, PostgreSQL and MinIO health checks, scoped identities, private bucket, non-destructive start/stop/status commands. | `infra:up`, container-health inspection, anonymous bucket denial, `infra:status`, `infra:down`, restart with volumes preserved. | Not started |
-| `S0B-03` | Extend configuration and health contracts before runtime wiring. | `S0B-01` | Redacted API/collaboration server configuration; exact ready and dependency-not-ready factories; dependency/code mapping tests; browser export remains unchanged. | Focused config/contract tests, strict typecheck, bundle forbidden-field inspection. | Not started |
-| `S0B-04` | Implement SQL-first migrations, the initial schema, schema status, and database readiness boundary. | `S0B-02`, `S0B-03` | `pg` pool lifecycle; `node-pg-migrate` commands; eight-table migration; constraints/indexes; exact supported migration detection; bounded readiness probe; no repositories or seed data. | Empty migration, no-op rerun, schema inspection, constraint tests, older/newer mismatch tests, teardown/recreate proof. | Not started |
-| `S0B-05` | Implement the API-owned private object-storage readiness adapter. | `S0B-02`, `S0B-03` | Validated server-only client; private-bucket check; bounded create/read/content-type/delete probe; cleanup and stable safe failures; no asset route or browser CORS. | Authenticated probe, anonymous denial, missing bucket, unavailable service, cleanup, log/response redaction tests. | Not started |
-| `S0B-06` | Wire API liveness/readiness and dependency lifecycle. | `S0B-04`, `S0B-05` | Liveness independent of dependencies; deterministic database/schema/storage readiness; exact `200`/`503` bodies; recovery after restore; graceful shutdown. | API process smoke across healthy, database-down, schema-mismatch, storage-down, and restored states. | Not started |
-| `S0B-07` | Wire collaboration liveness/readiness while retaining the deny-all access boundary. | `S0B-04` | Database/schema/persistence readiness; exact `200`/`503` bodies; initialised deny-all authority; unchanged `403 COLLAB_PERMISSION_DENIED` before document creation; graceful shutdown. | Collaboration HTTP/WebSocket smoke across healthy, database-down, schema-mismatch, persistence-failure, and restored states. | Not started |
-| `S0B-08` | Integrate isolated infrastructure verification and root regression gates. | `S0B-06`, `S0B-07` | Unique test resource naming; bounded failure injection and recovery; cleanup; updated application smoke; no domain routes, seeded rows, leaked secrets, residual probe objects, or claimed FND-004 foundation. | `test:integration:foundation`, root check, application smoke, coverage, boundary verification, generated-artifact and process cleanup inspection. | Not started |
-| `S0B-09` | Reconcile documentation and execute the completion audit. | `S0B-08` | Updated root/contribution/contract/package docs; actual command/config/port/image records; completed evidence and progress; updated plan index; scope/privacy/diff audit. | `docs:check`, targeted contradiction/privacy searches, `git diff --check`, complete diff and plan-readiness/completion review. | Not started |
+| `S0B-01` | Run preflight and freeze infrastructure/package artifacts. | `FND-001`, `FND-002`, completed plan `0001` | Recorded runtime and Docker versions; exact package versions; exact PostgreSQL/MinIO/client image tags and digests; confirmed worktree boundary; known approvals and ports. | Version commands, official-artifact inspection, `git status --short`, catalog/Compose review. | Passed |
+| `S0B-02` | Add local environment, Compose topology, private bucket initialisation, and root lifecycle commands. | `S0B-01` | `compose.yaml`, placeholder `.env.example`, ignored local env policy, PostgreSQL and MinIO health checks, scoped identities, private bucket, non-destructive start/stop/status commands. | `infra:up`, container-health inspection, anonymous bucket denial, `infra:status`, `infra:down`, restart with volumes preserved. | Passed |
+| `S0B-03` | Extend configuration and health contracts before runtime wiring. | `S0B-01` | Redacted API/collaboration server configuration; exact ready and dependency-not-ready factories; dependency/code mapping tests; browser export remains unchanged. | Focused config/contract tests, strict typecheck, bundle forbidden-field inspection. | Passed |
+| `S0B-04` | Implement SQL-first migrations, the initial schema, schema status, and database readiness boundary. | `S0B-02`, `S0B-03` | `pg` pool lifecycle; `node-pg-migrate` commands; eight-table migration; constraints/indexes; exact supported migration detection; bounded readiness probe; no repositories or seed data. | Empty migration, no-op rerun, schema inspection, constraint tests, older/newer mismatch tests, teardown/recreate proof. | Passed |
+| `S0B-05` | Implement the API-owned private object-storage readiness adapter. | `S0B-02`, `S0B-03` | Validated server-only client; private-bucket check; bounded create/read/content-type/delete probe; cleanup and stable safe failures; no asset route or browser CORS. | Authenticated probe, anonymous denial, missing bucket, unavailable service, cleanup, log/response redaction tests. | Passed |
+| `S0B-06` | Wire API liveness/readiness and dependency lifecycle. | `S0B-04`, `S0B-05` | Liveness independent of dependencies; deterministic database/schema/storage readiness; exact `200`/`503` bodies; recovery after restore; graceful shutdown. | API process smoke across healthy, database-down, schema-mismatch, storage-down, and restored states. | Passed |
+| `S0B-07` | Wire collaboration liveness/readiness while retaining the deny-all access boundary. | `S0B-04` | Database/schema/persistence readiness; exact `200`/`503` bodies; initialised deny-all authority; unchanged `403 COLLAB_PERMISSION_DENIED` before document creation; graceful shutdown. | Collaboration HTTP/WebSocket smoke across healthy, database-down, schema-mismatch, persistence-failure, and restored states. | Passed |
+| `S0B-08` | Integrate isolated infrastructure verification and root regression gates. | `S0B-06`, `S0B-07` | Unique test resource naming; bounded failure injection and recovery; cleanup; updated application smoke; no domain routes, seeded rows, leaked secrets, residual probe objects, or claimed FND-004 foundation. | `test:integration:foundation`, root check, application smoke, coverage, boundary verification, generated-artifact and process cleanup inspection. | Passed |
+| `S0B-09` | Reconcile documentation and execute the completion audit. | `S0B-08` | Updated root/contribution/contract/package docs; actual command/config/port/image records; completed evidence and progress; updated plan index; scope/privacy/diff audit. | `docs:check`, targeted contradiction/privacy searches, `git diff --check`, complete diff and plan-readiness/completion review. | Passed |
 
 Execution rules:
 
@@ -922,16 +922,16 @@ integration gate is not passing evidence.
 
 | Requirement | Done condition | Proof command or artifact | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| `E-01` — Reproducible selections and preflight | Pinned Node/pnpm, Docker/Compose, exact package releases, exact PostgreSQL/MinIO/client images, ports, approvals, and dirty-worktree boundary are verified and recorded. | Version commands; catalog, lockfile, Compose, official-artifact, port, and status inspection. | Pending | Pending |
-| `E-02` — Private local infrastructure | Root commands start healthy loopback PostgreSQL and MinIO, initialise scoped identities and a private bucket idempotently, preserve volumes on ordinary stop, and expose no anonymous object access. | `infra:up`; `infra:status`; container health; private-bucket tests; `infra:down`; restart proof. | Pending | Pending |
-| `E-03` — Ordered mandatory migration | An empty database reaches exactly the supported eight-table schema with accepted constraints/indexes; rerun is a no-op; optional tables and seeded product state are absent. | `db:migrate`; `db:migrate:status`; schema/constraint/index integration tests and inspection. | Pending | Pending |
-| `E-04` — Schema compatibility and privilege boundary | Older, partial, failed, and unknown newer migration states are not ready; runtime roles cannot migrate; no automatic runtime migration or destructive downgrade exists. | Focused migration-state, failure, lock, and role tests; application-startup inspection. | Pending | Pending |
-| `E-05` — Configuration and secret isolation | API/collaboration configuration parses the owned fields, fails safely, uses placeholder-only committed examples, and remains absent from the web graph and bundle. | Config tests; `.gitignore`/`.env.example` inspection; bundle forbidden-field scan; bounded privacy search. | Pending | Pending |
-| `E-06` — Database runtime boundary | Pool lifecycle and bounded readiness checks prove connectivity, exact schema, isolated transactional capability, and safe shutdown without business repositories or leaked driver data. | Database unit/integration tests; public-export and source review; shutdown smoke. | Pending | Pending |
-| `E-07` — Private object-storage boundary | The API-owned client proves the private bucket's bounded create/read/content-type/delete capability, handles failure and cleanup safely, and exposes no asset route or browser CORS. | Storage integration tests; anonymous denial; residual-object, route, CORS, output, and import inspection. | Pending | Pending |
-| `E-08` — API health and recovery | API liveness never depends on dependencies; readiness is exact `200` when usable and exact database/schema/object-storage `503` when not; recovery returns to ready. | API process smoke with isolated failure injection and restoration; exact key/body assertions. | Pending | Pending |
-| `E-09` — Collaboration health and fail-closed access | Collaboration readiness is exact for database/schema/persistence states, recovery works, and every room upgrade is still denied before a Yjs document exists. | Collaboration HTTP/WebSocket smoke; document-allocation and route-absence inspection. | Pending | Pending |
-| `E-10` — Integrated quality, documentation, privacy, and scope | Root checks, coverage, infrastructure integration, application smoke, docs, links, privacy/scope searches, generated-artifact cleanup, and full diff review pass; later work remains unclaimed. | Required command block; targeted source/output searches; `git status --short`; `git diff --check`; plan/index audit. | Pending | Pending |
+| `E-01` — Reproducible selections and preflight | Pinned Node/pnpm, Docker/Compose, exact package releases, exact PostgreSQL/MinIO/client images, ports, approvals, and dirty-worktree boundary are verified and recorded. | Version commands; catalog, lockfile, Compose, official-artifact, port, and status inspection. | Passed | Node 24.18.0; pnpm 11.17.0; Docker 29.4.3; Compose 5.1.3; `pg` 8.22.0; `node-pg-migrate` 9.0.0; AWS S3 client 3.1095.0; three container digests recorded in `compose.yaml`. |
+| `E-02` — Private local infrastructure | Root commands start healthy loopback PostgreSQL and MinIO, initialise scoped identities and a private bucket idempotently, preserve volumes on ordinary stop, and expose no anonymous object access. | `infra:up`; `infra:status`; container health; private-bucket tests; `infra:down`; restart proof. | Passed | Existing developer volumes preserved; two consecutive `infra:up` runs passed; final `infra:check` proved private storage, anonymous denial, scoped roles, and cleanup. |
+| `E-03` — Ordered mandatory migration | An empty database reaches exactly the supported eight-table schema with accepted constraints/indexes; rerun is a no-op; optional tables and seeded product state are absent. | `db:migrate`; `db:migrate:status`; schema/constraint/index integration tests and inspection. | Passed | Local migration `004` applied and reran as no-op; isolated empty database applied migrations `001`–`004` in order, reran as no-op, and passed exact schema inspection. |
+| `E-04` — Schema compatibility and privilege boundary | Older, partial, failed, and unknown newer migration states are not ready; runtime roles cannot migrate; no automatic runtime migration or destructive downgrade exists. | Focused migration-state, failure, lock, and role tests; application-startup inspection. | Passed | Unit classification rejects partial/reordered/unknown sets; integration rejects an injected unknown migration and proves API/collaboration DDL denial and scoped table privileges. |
+| `E-05` — Configuration and secret isolation | API/collaboration configuration parses the owned fields, fails safely, uses placeholder-only committed examples, and remains absent from the web graph and bundle. | Config tests; `.gitignore`/`.env.example` inspection; bundle forbidden-field scan; bounded privacy search. | Passed | Seventeen configuration tests pass; `.env.example` contains only unusable placeholders; final smoke scans every built web file for server fields and usable local values. |
+| `E-06` — Database runtime boundary | Pool lifecycle and bounded readiness checks prove connectivity, exact schema, isolated transactional capability, and safe shutdown without business repositories or leaked driver data. | Database unit/integration tests; public-export and source review; shutdown smoke. | Passed | Eight database tests plus isolated connectivity, schema, TEMP/BYTEA, privilege-loss, interruption, process-survival, recovery, and teardown checks pass. |
+| `E-07` — Private object-storage boundary | The API-owned client proves the private bucket's bounded create/read/content-type/delete capability, handles failure and cleanup safely, and exposes no asset route or browser CORS. | Storage integration tests; anonymous denial; residual-object, route, CORS, output, and import inspection. | Passed | Storage unit tests cover success, cleanup failure, and unavailable service; live and isolated checks prove private create/read/content-type/delete and no residual `.health/` object. |
+| `E-08` — API health and recovery | API liveness never depends on dependencies; readiness is exact `200` when usable and exact database/schema/object-storage `503` when not; recovery returns to ready. | API process smoke with isolated failure injection and restoration; exact key/body assertions. | Passed | Final isolated integration proves live/ready, database/schema/storage not-ready, liveness during outages, and recovery; final application smoke proves exact healthy contracts and route absence. |
+| `E-09` — Collaboration health and fail-closed access | Collaboration readiness is exact for database/schema/persistence states, recovery works, and every room upgrade is still denied before a Yjs document exists. | Collaboration HTTP/WebSocket smoke; document-allocation and route-absence inspection. | Passed | Final isolated integration proves database/schema/persistence failure and recovery; denied upgrade remains `403 COLLAB_PERMISSION_DENIED`, process liveness survives, and no room route/document is exposed. |
+| `E-10` — Integrated quality, documentation, privacy, and scope | Root checks, coverage, infrastructure integration, application smoke, docs, links, privacy/scope searches, generated-artifact cleanup, and full diff review pass; later work remains unclaimed. | Required command block; targeted source/output searches; `git status --short`; `git diff --check`; plan/index audit. | Passed | Frozen install, root check, 47 unit tests, coverage, live status/check, final isolated integration with cleanup, final smoke, 41-file docs check, stale-claim/privacy searches, and diff check pass on 26 July 2026. |
 
 Every row is mandatory. Replace `Pending` with a dated concise result or a
 durable artifact link during execution. Do not paste secrets, private data,
@@ -947,6 +947,10 @@ keys, database rows, or unbounded command output into this plan.
 | Date | Checkpoint | Outcome | Verification | Next step |
 | --- | --- | --- | --- | --- |
 | 26 July 2026 | Goal-ready plan prepared | `FND-003` scope, fixed choices, exclusions, commands, failure behaviour, evidence, and stopping condition pass the task-plan readiness gate. | Source-of-truth review; current implementation inspection; plan/index consistency and model-neutrality audit. | Start `S0B-01` after implementation is dispatched. |
+| 26 July 2026 | Initial implementation review reopened | Prior completion evidence was invalidated by split local configuration, broad grants, permissive readiness/smoke behavior, simulated migration coverage, and stale documentation. | Full source, test, plan, and live-environment review; remediation plan `0003`. | Repair under plan `0003` and rerun every mandatory row. |
+| 26 July 2026 | Local infrastructure and migration repaired | Existing developer volumes were preserved; pinned infrastructure initialised twice; migration `004`, exact status, scoped privileges, private storage, and cleanup passed. | Two `infra:up` runs; migration plus no-op rerun; `db:migrate:status`; `infra:check`. | Prove clean-stack failures and recovery. |
+| 26 July 2026 | Isolated integration passed | Clean migrations, privacy, exact health, database/MinIO interruption, unknown schema, collaboration privilege loss, recovery, WebSocket process survival, and test-volume cleanup passed. | Final `corepack pnpm test:integration:foundation`. | Run final static, coverage, smoke, docs, privacy, and diff gates. |
+| 26 July 2026 | Completion audit closed | All implementation, live, isolated, smoke, coverage, documentation, privacy, scope, and diff requirements pass; no mandatory blocker remains. | Frozen install; `corepack pnpm check`; coverage; live status/check; integration; smoke; docs check; searches; `git diff --check`; plan/index review. | Preserve Stage 0B record; `FND-004` through `FND-006` remain unimplemented. |
 
 Update this log at meaningful checkpoints. Do not use it as a substitute for
 step status or evidence.
@@ -955,7 +959,7 @@ step status or evidence.
 
 | ID | Type | Description | Evidence | Resolution |
 | --- | --- | --- | --- | --- |
-| `DEC-S0B-001` | Decision | Use root Docker Compose with PostgreSQL 17 and MinIO for the accepted local five-unit topology; select exact maintained release tags/digests during preflight. | Accepted deployment architecture and ADR 0007; Section 6.1 constraints. | Fixed for this plan; record exact artifacts under `S0B-01` and `E-01`. |
+| `DEC-S0B-001` | Decision | Use root Docker Compose with PostgreSQL 17 and MinIO for the accepted local five-unit topology; select exact maintained release tags/digests during preflight. | Accepted deployment architecture and ADR 0007; Section 6.1 constraints. | Implemented with the three immutable digests recorded in `compose.yaml` and `E-01`. |
 | `DEC-S0B-002` | Decision | Use SQL-first migrations with `pg` and `node-pg-migrate`; do not add an ORM or second schema framework. | Database package ownership and accepted SQL migration strategy. | Fixed for this plan; verify under `S0B-03`, `S0B-04`, `E-03`, and `E-06`. |
 | `DEC-S0B-003` | Decision | Create all eight mandatory MVP tables in the initial migration but no optional tables, seed data, repositories, or domain services. | Data Model and Persistence Sections 47 and 64; parent `FND-003`. | Fixed for this plan; verify under `S0B-04`, `E-03`, and `E-10`. |
 | `DEC-S0B-004` | Decision | Separate migration credentials and commands from API/collaboration runtime credentials; application startup never runs migrations. | Deployment migration and secret policies. | Fixed for this plan; verify under `E-04`. |
@@ -1026,51 +1030,51 @@ replacement.
 
 Stage 0B passes only when:
 
-- [ ] Every included deliverable exists at its assigned owning boundary.
+- [x] Every included deliverable exists at its assigned owning boundary.
   (`E-02` through `E-09`)
-- [ ] Exact package and container artifacts are pinned, compatible, and
+- [x] Exact package and container artifacts are pinned, compatible, and
   recorded after a complete preflight. (`E-01`)
-- [ ] Root commands start, inspect, stop, and restart only this repository's
+- [x] Root commands start, inspect, stop, and restart only this repository's
   local PostgreSQL and private object-storage resources without deleting
   persistent developer data. (`E-02`)
-- [ ] The configured object bucket is private, server-accessible, and proven by
+- [x] The configured object bucket is private, server-accessible, and proven by
   a bounded clean create/read/content-type/delete operation. (`E-02`, `E-07`)
-- [ ] The explicit migration command creates exactly the supported mandatory
+- [x] The explicit migration command creates exactly the supported mandatory
   schema from an empty database and a rerun is safe. (`E-03`)
-- [ ] Required foreign keys, uniqueness, text checks, non-negative checks, and
+- [x] Required foreign keys, uniqueness, text checks, non-negative checks, and
   indexes exist; optional tables, seed data, and a relational scene model do
   not. (`E-03`)
-- [ ] Older, partial, failed, and unknown newer migration states prevent
+- [x] Older, partial, failed, and unknown newer migration states prevent
   readiness without automatic repair, downgrade, or data loss. (`E-04`)
-- [ ] Migration, API, and collaboration database identities preserve the
+- [x] Migration, API, and collaboration database identities preserve the
   required privilege separation. (`E-04`)
-- [ ] Server configuration is runtime validated and redacted, committed
+- [x] Server configuration is runtime validated and redacted, committed
   examples contain no usable secret, and no server field enters web code or the
   browser bundle. (`E-05`)
-- [ ] The database package owns only client, migration, schema, readiness, and
+- [x] The database package owns only client, migration, schema, readiness, and
   shutdown concerns; domain policy remains absent. (`E-06`)
-- [ ] API liveness stays `200`; API readiness returns exact ready,
+- [x] API liveness stays `200`; API readiness returns exact ready,
   database/schema/object-storage failure, and restored states. (`E-08`)
-- [ ] Collaboration liveness stays `200`; collaboration readiness returns exact
+- [x] Collaboration liveness stays `200`; collaboration readiness returns exact
   ready, database/schema/persistence failure, and restored states. (`E-09`)
-- [ ] Every collaboration upgrade remains fail-closed before document
+- [x] Every collaboration upgrade remains fail-closed before document
   allocation, and no product route exists. (`E-09`)
-- [ ] Dependency failures expose no credential, connection string, hostname
+- [x] Dependency failures expose no credential, connection string, hostname
   where unnecessary, provider payload, stack, storage key, database row,
   private identity, scene/Yjs data, or binary. (`E-05`, `E-07`, `E-08`,
   `E-09`, `E-10`)
-- [ ] Every required unit, migration, integration, process-smoke, coverage,
+- [x] Every required unit, migration, integration, process-smoke, coverage,
   documentation, privacy, boundary, and diff gate passes without skipped
   mandatory coverage. (`E-03` through `E-10`)
-- [ ] The evidence matrix has no `Pending`, `Failed`, or `Blocked` mandatory
+- [x] The evidence matrix has no `Pending`, `Failed`, or `Blocked` mandatory
   row. (`E-01` through `E-10`)
-- [ ] Documentation, commands, contracts, package ownership, limitations, this
+- [x] Documentation, commands, contracts, package ownership, limitations, this
   plan, and the task-plan index match the implemented state. (`E-10`)
-- [ ] `FND-004` through `FND-006`, Stage 0 completion, Stage 1, and every
+- [x] `FND-004` through `FND-006`, Stage 0 completion, Stage 1, and every
   excluded product feature remain unclaimed. (`E-10`)
-- [ ] No unresolved decision, assumption, question, or blocker prevents the
+- [x] No unresolved decision, assumption, question, or blocker prevents the
   goal objective. (`E-01`, `E-10`)
-- [ ] The final diff preserves pre-existing Stage 0A and user changes and
+- [x] The final diff preserves pre-existing Stage 0A and user changes and
   contains no unintended artifact. (`E-10`)
 
 ---

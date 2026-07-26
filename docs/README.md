@@ -43,9 +43,10 @@ The current implementation-ready baseline consists of:
 
 The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md)
 sequences the accepted work and evidence. The proposed
-[foundation contract reference](./contracts/01-foundation-contracts.md)
-documents the executable Stage 0A representations. Both derive from the
-accepted baseline and must not introduce scope or architecture indirectly.
+[foundation contract reference](./contracts/01-foundation-contracts.md) and
+[local persistence and readiness reference](./contracts/02-local-persistence-and-readiness.md)
+document executable Stage 0 representations. They derive from the accepted
+baseline and must not introduce scope or architecture indirectly.
 
 ---
 
@@ -88,7 +89,7 @@ An unlabelled historical input is not authoritative merely because it exists in 
 | Architecture | [Architecture Documentation Index](./architecture/README.md) | Accepted system ownership, domain flows, interfaces, security, testing, and operations. |
 | Decisions | [Architecture Decision Records](./adr/README.md) | Accepted decision history and rationale. |
 | Planning | [Planning Documentation Index](./planning/README.md) | Proposed implementation sequencing, decision gates, acceptance traceability, testing, and delivery risks derived from accepted scope. |
-| Contracts | [Contract Documentation Index](./contracts/README.md) | Executable foundation identifiers, roles, errors, health, and configuration references. |
+| Contracts | [Contract Documentation Index](./contracts/README.md) | Executable foundation identifiers, roles, errors, configuration, local persistence, and readiness references. |
 
 Current specialised authority remains in architecture until a non-duplicative supplemental index is added:
 
@@ -126,7 +127,7 @@ Empty or reserved documentation directories are not evidence that an additional 
 4. The applicable ADRs.
 5. The proposed [MVP Implementation Plan](./planning/01-mvp-implementation-plan.md).
 6. The applicable plan from the [task-level plan index](./planning/plans/README.md).
-7. The [executable contract reference](./contracts/01-foundation-contracts.md).
+7. The applicable reference in the [contract index](./contracts/README.md).
 
 ## 6.4 Testing and release
 

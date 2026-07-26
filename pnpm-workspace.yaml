@@ -14,6 +14,7 @@ peerDependencyRules:
     react-dom: 19.2.8
 
 catalog:
+  "@aws-sdk/client-s3": 3.1095.0
   "@eslint/js": 9.39.5
   "@excalidraw/excalidraw": 0.18.1
   "@hocuspocus/server": 4.4.0
@@ -21,6 +22,7 @@ catalog:
   "@nestjs/core": 11.1.28
   "@nestjs/platform-fastify": 11.1.28
   "@types/node": 24.13.3
+  "@types/pg": 8.20.0
   "@types/react": 19.2.17
   "@types/react-dom": 19.2.3
   "@vitejs/plugin-react": 6.0.4
@@ -32,6 +34,8 @@ catalog:
   fastify: 5.10.0
   globals: 17.7.0
   lighthouse: 13.4.1
+  node-pg-migrate: 9.0.0
+  pg: 8.22.0
   react: 19.2.8
   react-dom: 19.2.8
   reflect-metadata: 0.2.2

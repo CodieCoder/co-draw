@@ -7,9 +7,18 @@ import {
   parseCollaborationConfiguration,
 } from "@vega/config/collaboration";
 import {
-  createFoundationNotReady,
   createLiveness,
+  createReady,
+  createNotReady,
 } from "@vega/contracts/health";
+import {
+  createPool,
+  endPool,
+  probeDatabaseReadiness,
+  probePersistenceReadiness,
+} from "@vega/database";
+
+import { mapDatabaseReadiness } from "./health.js";
 
 const writeJson = (
   response: ServerResponse,
@@ -27,13 +36,9 @@ const writeJson = (
 
 const bootstrap = async (): Promise<void> => {
   const configuration = parseCollaborationConfiguration(process.env);
-  const permissionDenied = (): Error & { readonly reason: string } =>
-    Object.assign(new Error("Collaboration access is unavailable."), {
-      reason: "COLLAB_PERMISSION_DENIED",
-    });
+  const pool = createPool(configuration.databaseUrl);
+
   const stopHandledHook = (): Promise<never> => {
-    // Hocuspocus uses an empty rejection as its documented sentinel for
-    // "response handled; skip later hooks and the default handler".
     // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
     return Promise.reject();
   };
@@ -49,14 +54,12 @@ const bootstrap = async (): Promise<void> => {
     maxPendingDocuments: 1,
 
     onAuthenticate() {
-      // Authority and persistence arrive in FND-003. Until then, every
-      // document request must stop before Hocuspocus creates a Yjs document.
+      // Authority and persistence arrive in later stages.
+      // Every document request must stop before Hocuspocus creates a Yjs document.
       return stopHandledHook();
     },
 
     onUpgrade({ socket }) {
-      // Reject the upgrade itself so an unauthenticated client cannot allocate
-      // a pending room document while the Stage 0 authority path is absent.
       const upgradeSocket = socket as Socket;
       upgradeSocket.end(
         [
@@ -68,10 +71,10 @@ const bootstrap = async (): Promise<void> => {
           "COLLAB_PERMISSION_DENIED",
         ].join("\r\n"),
       );
-      return Promise.reject(permissionDenied());
+      return stopHandledHook();
     },
 
-    onRequest({ request, response }) {
+    async onRequest({ request, response }) {
       if (request.method === "GET" && request.url === "/health/live") {
         writeJson(
           response,
@@ -82,14 +85,27 @@ const bootstrap = async (): Promise<void> => {
       }
 
       if (request.method === "GET" && request.url === "/health/ready") {
-        writeJson(
-          response,
-          503,
-          createFoundationNotReady(
-            "collaboration",
-            configuration.releaseId,
-          ),
-        );
+        const releaseId = configuration.releaseId;
+
+        // Deterministic readiness: DB → schema → persistence.
+        const dbResult = await probeDatabaseReadiness(pool);
+        if (!dbResult.ready) {
+          const { status, body } = mapDatabaseReadiness(releaseId, dbResult);
+          writeJson(response, status, body);
+          return stopHandledHook();
+        }
+
+        const persistenceResult = await probePersistenceReadiness(pool);
+        if (!persistenceResult.ready) {
+          writeJson(
+            response,
+            503,
+            createNotReady("collaboration", releaseId, "persistence", "PERSISTENCE_UNAVAILABLE"),
+          );
+          return stopHandledHook();
+        }
+
+        writeJson(response, 200, createReady("collaboration", releaseId));
         return stopHandledHook();
       }
 
@@ -102,15 +118,24 @@ const bootstrap = async (): Promise<void> => {
     },
   });
 
-  const shutdown = async (): Promise<void> => {
-    await server.destroy();
+  let shutdownPromise: Promise<void> | undefined;
+  const shutdown = (): Promise<void> => {
+    shutdownPromise ??= (async () => {
+      await server.destroy();
+      await endPool(pool);
+    })();
+    return shutdownPromise;
   };
 
   process.once("SIGINT", () => {
-    void shutdown();
+    void shutdown().catch(() => {
+      process.exitCode = 1;
+    });
   });
   process.once("SIGTERM", () => {
-    void shutdown();
+    void shutdown().catch(() => {
+      process.exitCode = 1;
+    });
   });
 
   await server.listen();

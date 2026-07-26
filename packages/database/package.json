@@ -12,10 +12,21 @@
   "scripts": {
     "build": "tsc -b",
     "lint": "eslint src --max-warnings=0",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "migrate": "node --experimental-sqlite=false --import tsx ./src/migrate.ts",
+    "migrate:status": "node --experimental-sqlite=false --import tsx ./src/migrate-status.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "node-pg-migrate": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
+    "@types/pg": "catalog:",
     "@vega/typescript-config": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

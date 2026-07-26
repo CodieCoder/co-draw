@@ -8,22 +8,30 @@
     "build": "tsc -b",
     "start": "node dist/main.js",
     "lint": "eslint src --max-warnings=0",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false && tsc --project tsconfig.test.json --pretty false",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",
     "@vega/config": "workspace:*",
     "@vega/contracts": "workspace:*",
+    "@vega/database": "workspace:*",
     "fastify": "catalog:",
+    "pg": "catalog:",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "@vega/typescript-config": "workspace:*",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

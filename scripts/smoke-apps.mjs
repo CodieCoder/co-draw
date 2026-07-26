@@ -1,10 +1,17 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { connect } from "node:net";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  commandEnvironment,
+  loadLocalEnvironment,
+} from "./local-environment.mjs";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
+const localEnvironment = loadLocalEnvironment();
+const environment = commandEnvironment(localEnvironment);
 const apiPort = 4_101;
 const collaborationPort = 12_341;
 const webPort = 5_273;
@@ -24,7 +31,7 @@ const waitForResponse = async (url, expectedStatus) => {
   while (Date.now() < deadline) {
     try {
       const response = await fetch(url);
-      if (response.status === expectedStatus) {
+      if (expectedStatus === null || response.status === expectedStatus) {
         return response;
       }
     } catch {
@@ -32,7 +39,7 @@ const waitForResponse = async (url, expectedStatus) => {
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error(`${url} did not return ${expectedStatus}.`);
+  throw new Error(`${url} did not return ${expectedStatus ?? "a response"}.`);
 };
 
 const assertExactKeys = (value, expected, label) => {
@@ -121,23 +128,34 @@ try {
     cwd: join(root, "apps/api"),
     env: {
       ...process.env,
+      ...environment,
       APP_PROFILE: "local",
       API_HOST: "127.0.0.1",
       API_PORT: String(apiPort),
       ALLOWED_WEB_ORIGINS: `http://127.0.0.1:${webPort}`,
-      RELEASE_ID: "stage-0a-smoke",
+      RELEASE_ID: "stage-0b-smoke",
+      API_DATABASE_URL: localEnvironment.API_DATABASE_URL,
+      OBJECT_STORAGE_ENDPOINT: localEnvironment.OBJECT_STORAGE_ENDPOINT,
+      OBJECT_STORAGE_REGION: localEnvironment.OBJECT_STORAGE_REGION,
+      OBJECT_STORAGE_BUCKET: localEnvironment.OBJECT_STORAGE_BUCKET,
+      OBJECT_STORAGE_ACCESS_KEY: localEnvironment.OBJECT_STORAGE_ACCESS_KEY,
+      OBJECT_STORAGE_SECRET_KEY: localEnvironment.OBJECT_STORAGE_SECRET_KEY,
+      OBJECT_STORAGE_FORCE_PATH_STYLE: "true",
     },
   });
   start(process.execPath, [join(root, "apps/collaboration/dist/main.js")], {
     cwd: join(root, "apps/collaboration"),
     env: {
       ...process.env,
+      ...environment,
       APP_PROFILE: "local",
       COLLABORATION_HOST: "127.0.0.1",
       COLLABORATION_PORT: String(collaborationPort),
       ALLOWED_WEB_ORIGINS: `http://127.0.0.1:${webPort}`,
-      RELEASE_ID: "stage-0a-smoke",
+      RELEASE_ID: "stage-0b-smoke",
       SUPPORTED_EXCALIDRAW_VERSION: "0.18.1",
+      COLLABORATION_DATABASE_URL:
+        localEnvironment.COLLABORATION_DATABASE_URL,
     },
   });
   start(
@@ -152,40 +170,39 @@ try {
     ],
     {
       cwd: join(root, "apps/web"),
-      env: process.env,
+      env: environment,
     },
   );
 
   await assertHealth(`http://127.0.0.1:${apiPort}/health/live`, 200, {
     service: "api",
     state: "live",
-    releaseId: "stage-0a-smoke",
+    releaseId: "stage-0b-smoke",
   });
-  await assertHealth(`http://127.0.0.1:${apiPort}/health/ready`, 503, {
+
+  await assertHealth(`http://127.0.0.1:${apiPort}/health/ready`, 200, {
     service: "api",
-    state: "not_ready",
-    releaseId: "stage-0a-smoke",
-    dependency: "foundation",
-    code: "FOUNDATION_INCOMPLETE",
+    state: "ready",
+    releaseId: "stage-0b-smoke",
   });
+
   await assertHealth(
     `http://127.0.0.1:${collaborationPort}/health/live`,
     200,
     {
       service: "collaboration",
       state: "live",
-      releaseId: "stage-0a-smoke",
+      releaseId: "stage-0b-smoke",
     },
   );
+
   await assertHealth(
     `http://127.0.0.1:${collaborationPort}/health/ready`,
-    503,
+    200,
     {
       service: "collaboration",
-      state: "not_ready",
-      releaseId: "stage-0a-smoke",
-      dependency: "foundation",
-      code: "FOUNDATION_INCOMPLETE",
+      state: "ready",
+      releaseId: "stage-0b-smoke",
     },
   );
 
@@ -213,35 +230,68 @@ try {
     throw new Error("The built web entry document is unavailable.");
   }
 
-  const entryMatch = webHtml.match(/<script[^>]+src="([^"]+)"/u);
-  if (entryMatch?.[1] === undefined) {
-    throw new Error("The built web entry asset was not found.");
-  }
-  const entryAsset = await readFile(
-    join(root, "apps/web/dist", entryMatch[1].replace(/^\//u, "")),
-    "utf8",
-  );
-  for (const forbidden of [
+  const forbiddenFields = [
     "ALLOWED_WEB_ORIGINS",
     "API_HOST",
     "API_PORT",
     "COLLABORATION_HOST",
     "COLLABORATION_PORT",
+    "API_DATABASE_URL",
+    "COLLABORATION_DATABASE_URL",
+    "MIGRATION_DATABASE_URL",
+    "OBJECT_STORAGE_ENDPOINT",
+    "OBJECT_STORAGE_ACCESS_KEY",
+    "OBJECT_STORAGE_SECRET_KEY",
+    "OBJECT_STORAGE_BUCKET",
+    "OBJECT_STORAGE_REGION",
     "DATABASE_URL",
     "guestEmail",
     "guest_email",
     "SESSION_SECRET",
-    "OBJECT_STORAGE_SECRET",
     "PRIVATE_KEY",
     "SUPPORTED_EXCALIDRAW_VERSION",
-  ]) {
-    if (entryAsset.includes(forbidden)) {
-      throw new Error(`The web bundle contains forbidden field ${forbidden}.`);
+  ];
+  const secretFields = [
+    "API_DATABASE_URL",
+    "COLLABORATION_DATABASE_URL",
+    "MIGRATION_DATABASE_URL",
+    "OBJECT_STORAGE_ENDPOINT",
+    "OBJECT_STORAGE_BUCKET",
+    "OBJECT_STORAGE_ACCESS_KEY",
+    "OBJECT_STORAGE_SECRET_KEY",
+    "MINIO_ROOT_USER",
+    "MINIO_ROOT_PASSWORD",
+  ];
+  const forbiddenValues = secretFields
+    .map((field) => localEnvironment[field])
+    .filter((value) => typeof value === "string" && value.length >= 8);
+  const distDirectory = join(root, "apps/web/dist");
+  const builtFiles = await readdir(distDirectory, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  for (const file of builtFiles) {
+    if (!file.isFile()) {
+      continue;
+    }
+    const relativePath = join(file.parentPath, file.name);
+    const asset = await readFile(relativePath, "utf8");
+    for (const forbidden of forbiddenFields) {
+      if (asset.includes(forbidden)) {
+        throw new Error(
+          `The web build contains forbidden server field ${forbidden}.`,
+        );
+      }
+    }
+    for (const forbidden of forbiddenValues) {
+      if (asset.includes(forbidden)) {
+        throw new Error("The web build contains a server-only value.");
+      }
     }
   }
 
   process.stdout.write(
-    "Application smoke checks passed: web available, health truthful, routes absent, collaboration fail-closed.\n",
+    "Application smoke checks passed: web available, health truthful, routes absent, collaboration fail-closed, secrets excluded.\n",
   );
 } finally {
   await stopProcesses();

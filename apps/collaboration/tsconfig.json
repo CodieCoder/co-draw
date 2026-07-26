@@ -6,12 +6,10 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"],
   "references": [
-    {
-      "path": "../../packages/config"
-    },
-    {
-      "path": "../../packages/contracts"
-    }
+    { "path": "../../packages/config" },
+    { "path": "../../packages/contracts" },
+    { "path": "../../packages/database" }
   ]
 }

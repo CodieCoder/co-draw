@@ -45,7 +45,8 @@ The cross-stage dependency sequence remains authoritative in the parent [MVP Imp
 | No. | Plan | Parent plan | Work packages | Document status | Execution status |
 | ---: | --- | --- | --- | --- | --- |
 | 0001 | [Stage 0A — Monorepo Scaffold and Executable Contracts](./0001-stage-0a-monorepo-scaffold-and-executable-contracts.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-001`, `FND-002` | Proposed | Passed |
-| 0002 | [Stage 0B — Local Persistence Infrastructure and Truthful Readiness](./0002-stage-0b-local-persistence-infrastructure-and-readiness.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-003` | Proposed | Ready |
+| 0002 | [Stage 0B — Local Persistence Infrastructure and Truthful Readiness](./0002-stage-0b-local-persistence-infrastructure-and-readiness.md) | [MVP Implementation Plan](../01-mvp-implementation-plan.md) | `FND-003` | Proposed | Passed |
+| 0003 | [Stage 0B Review Remediation](./0003-stage-0b-review-remediation.md) | [Stage 0B](./0002-stage-0b-local-persistence-infrastructure-and-readiness.md) | `FND-003` | Proposed | Passed |
 
 ---
 

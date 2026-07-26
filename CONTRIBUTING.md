@@ -24,6 +24,11 @@ nvm use
 node --version
 corepack pnpm --version
 corepack pnpm install --frozen-lockfile
+cp .env.example .env.local
+# Replace every CHANGE_ME value with synthetic local credentials.
+corepack pnpm infra:up
+corepack pnpm db:migrate
+corepack pnpm infra:check
 corepack pnpm check
 ```
 
@@ -35,9 +40,20 @@ runtime. See the root [prerequisites](./README.md#prerequisites) and
 [troubleshooting guide](./README.md#troubleshooting) when either version check
 fails.
 
+Local commands load the ignored `.env.local` file. Keep the migration, API,
+and collaboration database roles distinct and target the same database. Never
+commit usable database or object-storage credentials. Run migrations
+explicitly; application startup must not apply or downgrade schema changes.
+`corepack pnpm infra:down` is the ordinary non-destructive teardown and
+preserves named volumes. Do not delete volumes unless the exact target contains
+only disposable data and data loss is separately authorised.
+
 Run the focused gates for any area you change. Before handoff, also run:
 
 ```sh
+corepack pnpm db:migrate:status
+corepack pnpm infra:check
+corepack pnpm test:integration:foundation
 corepack pnpm smoke:apps
 corepack pnpm test:coverage
 corepack pnpm bundle:report
@@ -78,11 +94,14 @@ provider errors.
 
 ## Testing
 
-Stage 0A uses focused Vitest contract tests and process/protocol smoke checks.
-Write negative-path tests for parsing, trust boundaries, redaction, health, and
-fail-closed behaviour. Browser automation and broader service-integration
-fixtures remain owned by `FND-004`; do not quietly claim that foundation from
-the Stage 0A checks.
+Stage 0 uses focused Vitest contract tests, a uniquely scoped infrastructure
+integration suite, and process/protocol smoke checks. Write negative-path tests
+for parsing, trust boundaries, redaction, health, fail-closed behaviour,
+dependency interruption, schema incompatibility, permission loss, recovery,
+and cleanup. The foundation integration script may create and remove only its
+generated `vega-canvas-it-*` Compose project. Browser automation and the
+general service-integration fixture foundation remain owned by `FND-004`; do
+not quietly claim them from the Stage 0B checks.
 
 Use synthetic data only. Do not paste credentials or private application data
 into tests, snapshots, reports, or issue descriptions.

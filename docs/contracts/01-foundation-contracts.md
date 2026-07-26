@@ -14,7 +14,7 @@
 
 # 1. Purpose
 
-Document the executable Stage 0A identifier, role, error, health, and
+Document the executable foundation identifier, role, error, health, and
 configuration contracts without duplicating later domain APIs.
 
 The runtime implementations are:
@@ -42,7 +42,7 @@ Included:
 
 Excluded:
 
-- Database migrations or repositories.
+- Database migrations, schema details, or repositories.
 - Session or collaboration claim formats.
 - Capability derivation.
 - Room, asset, export, scene, Yjs document, or Awareness schemas.
@@ -59,8 +59,8 @@ Excluded:
 | `@vega/contracts/errors` | Validate exact stable error registries and the bounded API error shape. |
 | `@vega/contracts/health` | Create and validate strict service health results. |
 | `@vega/config/web` | Parse public browser configuration only. |
-| `@vega/config/api` | Parse API listener and web-origin configuration. |
-| `@vega/config/collaboration` | Parse collaboration listener, origin, release, and Excalidraw compatibility configuration. |
+| `@vega/config/api` | Parse API listener, origin, database, and object-storage configuration. |
+| `@vega/config/collaboration` | Parse collaboration listener, origin, database, release, and Excalidraw compatibility configuration. |
 
 `@vega/config` intentionally has no root export. That prevents a convenient
 barrel from pulling server configuration into the browser graph.
@@ -88,9 +88,9 @@ Every identifier:
 - Has a distinct TypeScript brand so one identifier kind is not assignable to
   another without explicit unsafe casting.
 
-PostgreSQL will use its native `uuid` type when `FND-003` introduces
-migrations. The brand exists at the TypeScript boundary; it does not require a
-different database column type or a second identifier representation.
+PostgreSQL uses its native `uuid` type in the Stage 0B migrations. The brand
+exists at the TypeScript boundary; it does not require a different database
+column type or a second identifier representation.
 
 ---
 
@@ -131,21 +131,34 @@ Liveness:
 }
 ```
 
-Stage 0A readiness:
+Ready:
+
+```json
+{
+  "service": "api",
+  "state": "ready",
+  "releaseId": "local-dev"
+}
+```
+
+Dependency not-ready:
 
 ```json
 {
   "service": "api",
   "state": "not_ready",
   "releaseId": "local-dev",
-  "dependency": "foundation",
-  "code": "FOUNDATION_INCOMPLETE"
+  "dependency": "object_storage",
+  "code": "OBJECT_STORAGE_UNAVAILABLE"
 }
 ```
 
-The collaboration shape differs only in service identity. Both readiness
-endpoints use HTTP `503` until `FND-003` initialises required configuration,
-persistence, and authority dependencies.
+The collaboration shape differs only in service identity. Ready results use
+HTTP `200`; not-ready results use HTTP `503`. The strict dependency/code
+mapping includes configuration, database, object storage, authentication,
+authorization, persistence, schema, collaboration control, and the historical
+foundation state. Stage 0B currently emits database, schema, object-storage,
+and persistence failures. Later mappings are reserved for their owning stages.
 
 Health schemas reject unknown fields. They cannot carry raw errors, hostnames,
 connection strings, credentials, guest identity, scenes, Yjs state, asset
@@ -164,11 +177,15 @@ OR
 → ConfigurationError with field paths and stable codes only
 ```
 
-Local parsing uses the defaults documented in the
-[root README](../../README.md#configuration). Demo and production-shaped web
-URLs require HTTPS for the API and WSS for collaboration. Non-local allowed
-web origins require exact HTTPS origins. Wildcards, embedded credentials,
-paths, queries, and fragments are rejected.
+Local parsing uses the defaults and required fields documented in the
+[root README](../../README.md#configuration). API configuration owns its
+runtime database URL and object-storage endpoint, region, bucket, credential,
+and path-style setting. Collaboration configuration owns its runtime database
+URL. Demo and production-shaped web URLs require HTTPS for the API and WSS for
+collaboration. Non-local database URLs require TLS configuration; non-local
+object storage requires HTTPS. Non-local allowed web origins require exact
+HTTPS origins. Wildcards, embedded credentials where disallowed, paths,
+queries, fragments, placeholders, and malformed bucket names are rejected.
 
 The web package consumes only `@vega/config/web` and Vite-prefixed public
 fields. It cannot import either server parser.
@@ -203,7 +220,8 @@ Focused tests must prove:
 - API and collaboration health status codes and exact response fields.
 - Fail-closed collaboration upgrades.
 
-The Stage 0A tests do not claim the broader integration and Playwright
+The Stage 0B infrastructure integration test is a focused proof of this
+contract. It does not claim the general service-integration or Playwright
 foundation assigned to `FND-004`.
 
 ---

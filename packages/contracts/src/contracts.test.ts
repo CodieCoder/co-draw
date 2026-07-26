@@ -10,6 +10,8 @@ import {
   HEALTH_ERROR_CODES,
   createFoundationNotReady,
   createLiveness,
+  createNotReady,
+  createReady,
   readinessSchema,
 } from "./health.js";
 import { ROLE_VALUES, roleSchema } from "./roles.js";
@@ -139,6 +141,66 @@ describe("health contracts", () => {
         releaseId: "test",
       }).success,
     ).toBe(false);
+  });
+
+  it("creates strict ready results", () => {
+    expect(createReady("api", "test")).toEqual({
+      service: "api",
+      state: "ready",
+      releaseId: "test",
+    });
+  });
+
+  it("creates dependency-specific not-ready results", () => {
+    expect(createNotReady("api", "test", "database", "DATABASE_UNAVAILABLE")).toEqual({
+      service: "api",
+      state: "not_ready",
+      releaseId: "test",
+      dependency: "database",
+      code: "DATABASE_UNAVAILABLE",
+    });
+
+    expect(
+      createNotReady("collaboration", "test", "schema", "SCHEMA_UNSUPPORTED"),
+    ).toEqual({
+      service: "collaboration",
+      state: "not_ready",
+      releaseId: "test",
+      dependency: "schema",
+      code: "SCHEMA_UNSUPPORTED",
+    });
+
+    expect(
+      createNotReady("api", "test", "object_storage", "OBJECT_STORAGE_UNAVAILABLE"),
+    ).toEqual({
+      service: "api",
+      state: "not_ready",
+      releaseId: "test",
+      dependency: "object_storage",
+      code: "OBJECT_STORAGE_UNAVAILABLE",
+    });
+
+    expect(
+      createNotReady(
+        "collaboration",
+        "test",
+        "persistence",
+        "PERSISTENCE_UNAVAILABLE",
+      ),
+    ).toEqual({
+      service: "collaboration",
+      state: "not_ready",
+      releaseId: "test",
+      dependency: "persistence",
+      code: "PERSISTENCE_UNAVAILABLE",
+    });
+  });
+
+  it("prevents mismatched dependency/code combinations", () => {
+    // Runtime guard prevents invalid combinations even when types align.
+    expect(() =>
+      createNotReady("api", "test", "database", "FOUNDATION_INCOMPLETE"),
+    ).toThrow();
   });
 
   it("rejects raw diagnostic fields", () => {

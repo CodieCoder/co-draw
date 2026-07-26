@@ -9,7 +9,14 @@
     "pnpm": "11.17.0"
   },
   "scripts": {
-    "dev": "turbo run dev --parallel",
+    "dev": "node scripts/dev.mjs",
+    "infra:up": "node scripts/infra-up.mjs",
+    "infra:down": "node scripts/infra-down.mjs",
+    "infra:status": "node scripts/infra-status.mjs",
+    "db:migrate": "node --env-file=.env.local --import tsx packages/database/src/migrate.ts",
+    "db:migrate:status": "node --env-file=.env.local --import tsx packages/database/src/migrate-status.ts",
+    "infra:check": "node --env-file=.env.local --import tsx apps/api/src/infra-check.ts",
+    "test:integration:foundation": "node scripts/test-integration-foundation.mjs",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint && eslint scripts eslint.config.js --max-warnings=0 && node scripts/verify-boundaries.mjs",

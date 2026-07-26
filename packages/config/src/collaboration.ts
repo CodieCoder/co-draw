@@ -3,6 +3,7 @@ import {
   readHost,
   readOrigins,
   readPort,
+  readPostgresUrl,
   readProfile,
   readReleaseId,
   readText,
@@ -19,6 +20,7 @@ export interface CollaborationConfiguration {
   readonly allowedWebOrigins: readonly string[];
   readonly releaseId: string;
   readonly supportedExcalidrawVersion: "0.18.1";
+  readonly databaseUrl: string;
 }
 
 export const parseCollaborationConfiguration = (
@@ -48,5 +50,6 @@ export const parseCollaborationConfiguration = (
     allowedWebOrigins: readOrigins(raw, "ALLOWED_WEB_ORIGINS", profile),
     releaseId: readReleaseId(raw, "RELEASE_ID", profile),
     supportedExcalidrawVersion,
+    databaseUrl: readPostgresUrl(raw, "COLLABORATION_DATABASE_URL", profile),
   };
 };

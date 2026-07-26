@@ -25,6 +25,7 @@ expanding accepted product behaviour or changing architectural ownership.
 | No. | Document | Executable owner | Status |
 | ---: | --- | --- | --- |
 | 01 | [Foundation Contracts](./01-foundation-contracts.md) | `packages/contracts` and `packages/config` | Proposed |
+| 02 | [Local Persistence and Readiness](./02-local-persistence-and-readiness.md) | Root infrastructure, `packages/database`, API, and collaboration | Proposed |
 
 Accepted product, architecture, and ADR documents remain authoritative when a
 contract reference conflicts with them.
