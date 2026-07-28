@@ -1,0 +1,143 @@
+.vega-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.vega-minimap {
+  position: absolute;
+  z-index: 5;
+  right: 0.875rem;
+  bottom: 4.25rem;
+  width: min(14rem, calc(100vw - 2rem));
+  padding: 0.6rem;
+  border: 1px solid rgb(14 28 24 / 16%);
+  border-radius: 0.9rem;
+  color: #14221e;
+  background: rgb(250 250 246 / 92%);
+  box-shadow:
+    0 12px 32px rgb(17 24 20 / 14%),
+    inset 0 1px 0 rgb(255 255 255 / 80%);
+  backdrop-filter: blur(14px);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.vega-minimap__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vega-minimap__heading span:last-child {
+  color: #53655f;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.vega-minimap__map {
+  display: block;
+  width: 100%;
+  height: 7.5rem;
+  overflow: hidden;
+  border-radius: 0.6rem;
+  cursor: crosshair;
+}
+
+.vega-minimap__background {
+  fill: #e9ede8;
+}
+
+.vega-minimap__element {
+  fill: #82948d;
+  opacity: 0.72;
+}
+
+.vega-minimap__viewport {
+  fill: rgb(183 255 98 / 12%);
+  stroke: #365824;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.vega-minimap__collaborator {
+  stroke: #fff;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.vega-minimap__radar {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.vega-minimap__radar:empty {
+  display: none;
+}
+
+.vega-minimap__radar button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.55rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #24342f;
+  background: #dde5df;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.vega-minimap__radar button:hover {
+  background: #cfdcd3;
+}
+
+.vega-minimap__radar button:focus-visible {
+  outline: 3px solid #365824;
+  outline-offset: 2px;
+}
+
+.vega-canvas__status {
+  position: absolute;
+  z-index: 6;
+  right: 0.875rem;
+  bottom: 1rem;
+  max-width: min(20rem, calc(100vw - 2rem));
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(14 28 24 / 14%);
+  border-radius: 999px;
+  color: #14221e;
+  background: rgb(250 250 246 / 94%);
+  box-shadow: 0 8px 24px rgb(17 24 20 / 12%);
+  font: 600 0.8rem/1.2 "Avenir Next", "Segoe UI", sans-serif;
+}
+
+@media (max-width: 640px) {
+  .vega-minimap {
+    right: 0.5rem;
+    bottom: 3.75rem;
+    width: 10.5rem;
+  }
+
+  .vega-minimap__map {
+    height: 5.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vega-minimap *,
+  .vega-canvas__status {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}
+

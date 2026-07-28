@@ -51,6 +51,34 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function requestBinary(path: string): Promise<Blob> {
+  if (!apiBaseUrl) {
+    throw new Error("API client is not configured");
+  }
+
+  const response = await fetch(`${apiBaseUrl}/api/v1${path}`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null);
+    const parsed = apiErrorResponseSchema.safeParse(payload);
+    if (parsed.success) {
+      throw new ApiClientError(
+        parsed.data.error.message,
+        parsed.data.error.code,
+        response.status,
+        parsed.data.error.requestId,
+      );
+    }
+    throw new ApiClientError(
+      "The image could not be loaded",
+      "UNEXPECTED_RESPONSE",
+      response.status,
+    );
+  }
+  return response.blob();
+}
+
 export interface GuestSessionResponse {
   guest: { id: string; username: string; colour: string };
   session: { expiresAt: string };
@@ -114,6 +142,24 @@ export interface CollaborationBootstrapResponse {
   };
 }
 
+export interface ImageAssetResponse {
+  asset: {
+    id: string;
+    kind: "image";
+    status: "pending" | "uploading" | "ready" | "failed";
+    mimeType: "image/png" | "image/jpeg" | "image/webp";
+    sizeBytes: number;
+    readyAt?: string;
+  };
+}
+
+export interface CreateImageAssetResponse extends ImageAssetResponse {
+  upload: {
+    method: "API_PROXY";
+    endpoint: string;
+  };
+}
+
 export function createGuestSession(
   username: string,
   email: string,
@@ -144,6 +190,58 @@ export function getCollaborationBootstrap(
 ): Promise<CollaborationBootstrapResponse> {
   return request<CollaborationBootstrapResponse>(
     `/rooms/${encodeURIComponent(roomId)}/collaboration`,
+  );
+}
+
+export function createImageAsset(
+  roomId: string,
+  input: {
+    mimeType: "image/png" | "image/jpeg" | "image/webp";
+    sizeBytes: number;
+  },
+): Promise<CreateImageAssetResponse> {
+  return request<CreateImageAssetResponse>(
+    `/rooms/${encodeURIComponent(roomId)}/assets`,
+    {
+      method: "POST",
+      body: JSON.stringify({ kind: "image", ...input }),
+    },
+  );
+}
+
+export function uploadImageAsset(
+  roomId: string,
+  assetId: string,
+  dataUrl: string,
+): Promise<ImageAssetResponse> {
+  return request<ImageAssetResponse>(
+    `/rooms/${encodeURIComponent(roomId)}/assets/${encodeURIComponent(assetId)}/content`,
+    {
+      method: "POST",
+      body: JSON.stringify({ dataUrl }),
+    },
+  );
+}
+
+export function completeImageAsset(
+  roomId: string,
+  assetId: string,
+): Promise<ImageAssetResponse> {
+  return request<ImageAssetResponse>(
+    `/rooms/${encodeURIComponent(roomId)}/assets/${encodeURIComponent(assetId)}/complete`,
+    {
+      method: "POST",
+      body: JSON.stringify({}),
+    },
+  );
+}
+
+export function getImageAssetContent(
+  roomId: string,
+  assetId: string,
+): Promise<Blob> {
+  return requestBinary(
+    `/rooms/${encodeURIComponent(roomId)}/assets/${encodeURIComponent(assetId)}/content`,
   );
 }
 

@@ -14,7 +14,7 @@ export default [
       },
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["src/*.test.ts"]
+          allowDefaultProject: ["src/*.test.ts", "src/assets/*.test.ts"]
         },
         tsconfigRootDir: process.cwd()
       }

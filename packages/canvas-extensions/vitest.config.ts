@@ -1,0 +1,19 @@
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    name: "@vega/canvas-extensions",
+    globals: false,
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+    clearMocks: true,
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts", "src/**/*.d.ts"],
+    },
+  },
+});

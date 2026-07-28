@@ -7,6 +7,7 @@ import { GuestController } from "./guest/guest.controller.js";
 import { RoomController } from "./room/room.controller.js";
 import { ShareLinksController } from "./share-links/share-links.controller.js";
 import { CollaborationController } from "./collaboration/collaboration.controller.js";
+import { AssetController } from "./assets/asset.controller.js";
 import { DependencyLifecycle } from "./dependency-lifecycle.js";
 import { SessionGuard, OptionalSessionGuard } from "./session/session.guard.js";
 import { API_CONFIGURATION, DB_POOL, STORAGE_CLIENT } from "./runtime-config.js";
@@ -25,7 +26,7 @@ export class AppModule {
 
     return {
       module: AppModule,
-      controllers: [HealthController, GuestController, RoomController, ShareLinksController, CollaborationController],
+      controllers: [HealthController, GuestController, RoomController, ShareLinksController, CollaborationController, AssetController],
       providers: [
         { provide: API_CONFIGURATION, useValue: configuration },
         { provide: DB_POOL, useValue: pool },

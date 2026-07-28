@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 
@@ -40,6 +40,18 @@ export function RoomPage() {
   const collaboration = useRoomProvider(
     roomId ?? null,
     bootstrap.data ?? null,
+  );
+  const participant = useMemo(
+    () =>
+      bootstrap.data
+        ? {
+            guestId: bootstrap.data.guest.id,
+            username: bootstrap.data.guest.username,
+            colour: bootstrap.data.guest.colour,
+            role: bootstrap.data.access.role,
+          }
+        : null,
+    [bootstrap.data],
   );
   const shareCreation = useMutation({
     mutationFn: () => createShareLink(roomId!),
@@ -129,7 +141,15 @@ export function RoomPage() {
       ) : null}
       <section style={{ flex: 1, minHeight: 0 }} aria-label="Shared canvas">
         {collaboration.ydoc ? (
-          <CanvasController ydoc={collaboration.ydoc} />
+          <CanvasController
+            ydoc={collaboration.ydoc}
+            roomId={roomId}
+            provider={collaboration.provider}
+            {...(participant ? { participant } : {})}
+            canUploadAssets={
+              room.data?.capabilities?.canUploadAssets === true
+            }
+          />
         ) : (
           <p>Connecting to room…</p>
         )}

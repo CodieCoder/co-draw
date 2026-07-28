@@ -36,6 +36,7 @@ catalog:
   fastify: 5.10.0
   globals: 17.7.0
   lighthouse: 13.4.1
+  matter-js: 0.20.0
   node-pg-migrate: 9.0.0
   pg: 8.22.0
   react: 19.2.8

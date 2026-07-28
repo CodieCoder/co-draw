@@ -18,6 +18,7 @@ const bootstrap = async (): Promise<void> => {
   const application = await NestFactory.create<NestFastifyApplication>(
     AppModule.register(configuration),
     new FastifyAdapter({
+      bodyLimit: 14 * 1024 * 1024,
       logger: false,
       trustProxy: false,
     }),

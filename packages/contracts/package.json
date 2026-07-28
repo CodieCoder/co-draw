@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./assets": {
+      "types": "./dist/assets.d.ts",
+      "default": "./dist/assets.js"
+    },
     "./collaboration-token": {
       "types": "./dist/collaboration-token.d.ts",
       "default": "./dist/collaboration-token.js"

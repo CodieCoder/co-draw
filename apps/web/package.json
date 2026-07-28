@@ -17,6 +17,7 @@
     "@hocuspocus/provider": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@vega/auth": "workspace:*",
+    "@vega/canvas-extensions": "workspace:*",
     "@vega/collaboration-schema": "workspace:*",
     "@vega/config": "workspace:*",
     "@vega/contracts": "workspace:*",
@@ -25,6 +26,7 @@
     "react-dom": "catalog:",
     "react-router": "catalog:",
     "react-router-dom": "catalog:",
+    "y-protocols": "catalog:",
     "yjs": "catalog:"
   },
   "devDependencies": {
